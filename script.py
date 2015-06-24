@@ -10,6 +10,7 @@ def getPath(nam, f_path=None, v=False):
     return os.path.join(f_path, nam)
 
 def replace(*args, **kw):
+    #just playing with a pythonic way of replacing sed 's///g'
     v = kw['v']
     if v: print '  replace args:', args
     #get useful args
@@ -33,6 +34,7 @@ def replace(*args, **kw):
     move(abs_path, file_path)
 
 def chk(*args, **kw):
+    # checks the last enery of a calculation
     v = kw.get('v', False)
     if v: print '  check args:', args, kw
     #get useful args
@@ -74,6 +76,7 @@ def chk(*args, **kw):
     return float(res['F'])/float(n_atoms)
     
 def compare(*args, **kw):
+    # returns str of list of filename energy for every sub directory
     v = kw.get('v', False)
     a = kw.get('a', True)
     cwd = os.getcwd()
@@ -99,7 +102,7 @@ def compare(*args, **kw):
     #for f_path, f_energy in sorted(res.iteritems(), key=lambda x: x[1]):
     #    txt += ('{0:'+str(pad)+'.'+str(pad)+'}:'+
     #           '{1:14.7f}').format(f_path[-pad:], f_energy)
-    txt = '\n'.join([('{0:'+str(pad)+'.'+str(pad)+'}:'+
+    txt = '\n'.join([('{0:'+str(pad)+'.'+str(pad)+'}'+
                       '{1:14.7f}').format(f_path[-pad:], f_energy)
                       for f_path, f_energy in sorted(res.iteritems(),
                                                      key=lambda x: x[1])])
@@ -110,6 +113,7 @@ def getEnergies(*args, **kw):
             for vals in compare(*args, **kw).replace(' ', '').split()]
 
 def substract(*args, **kw):
+    # to calculate binding energy
     v = kw.get('v', False)
     bind = kw.get('bind', False)
 
