@@ -2,7 +2,9 @@ import sys, os, re
 from tempfile import mkstemp
 from shutil import move
 
-#TODO: add decorators a print
+#TODO: separate functions into different scripts
+#TODO: use argparse
+#TODO: add decorators a print for verbosity
 
 def getPath(nam, f_path=None, v=False):
     f_path = f_path if f_path else os.getcwd()
