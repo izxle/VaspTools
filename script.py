@@ -1,200 +1,392 @@
+# -*- coding: utf-8 -*-
+
+from numpy import sort, array, polyfit
 import sys, os, re
-from tempfile import mkstemp
-from shutil import move
+import argparse
+########
+#TODO: add scipy @ PC-YLN-U
+#REMOVE @ PC-YLN-U
+from numpy import linspace
+from scipy.optimize import leastsq, minimize_scalar
+import matplotlib.pyplot as plt
+########
 
-#TODO: separate functions into different scripts
-#TODO: use argparse
-#TODO: add decorators a print for verbosity
+class Calc(object):
+    def __init__(self, f_path, v, i=[], *args, **kw):
+        self.f_path = f_path
+        self.nam = os.path.basename(f_path)
+        self.ignore = i # ignored folders
+        self.v = v # verbosity
 
-def getPath(nam, f_path=None, v=False):
-    f_path = f_path if f_path else os.getcwd()
-    if v>2: print '  f_path:', f_path 
-    return os.path.join(f_path, nam)
-
-def replace(*args, **kw):
-    #just playing with a pythonic way of replacing sed 's///g'
-    v = kw['v']
-    if v: print '  replace args:', args
-    #get useful args
-    nam = args[0]
-    pattern = args[1]
-    subst = args[2]
-    file_path = getPath(nam, v=v)
-    if v: print '  file path:', file_path
-    #display invalid args
-    if len(args)>3: print 'Found extra (useless) args:', args[3:]
-    #make tmp file
-    fh, abs_path = mkstemp()
-    #open original file and write replaced patterns to tmp file
-    with open(abs_path,'w') as new_file:
-        with open(file_path) as old_file:
-            for line in old_file:
-                new_file.write(re.sub(pattern, subst, line))
-    #close fh y replace old with new file
-    os.close(fh)
-    os.remove(file_path)
-    move(abs_path, file_path)
-
-def chk(*args, **kw):
-    # checks the last enery of a calculation
-    v = kw.get('v', False)
-    if v: print '  check args:', args, kw
-    #get useful args
-    nam = kw.get('f', 'OSZICAR')
-    POSCAR = kw.get('POSCAR', 'POSCAR')
-    if v>2: print '  nam:', nam
-    if kw.get('not', '\t\n\t\n')in nam: return
-    file_path = getPath(nam, v=v)
-    POSCAR_path = getPath(POSCAR, v=v)
-    if v: print '  path:', file_path
-    if v>3: print '  POSCAR:', POSCAR
-    #TODO: chk other stuff?
+class Check(Calc):
+    def __init__(self, pad='', *args, **kw):
+        Calc.__init__(self, *args, **kw)
+        if self.v>1: print '{0}in calc'.format(pad)
+        if self.v: print '{0}f_path: {1}'.format(pad, self.f_path)
+        self.pad = pad
+        
+        # get n_atoms
+        self._readPOSCAR()
+        # get energy data
+        self._readOSZICAR()
+        # get time data
+        self._readOUTCAR()
     
-    #CHK energy
+    def _readPOSCAR(self):
+        path = self.getPath('POSCAR')
+        if self.v: print '{0}reading POSCAR'.format(self.pad)
+        with open(path, 'r') as f:
+            #TODO: read more data
+            # like how many atoms from which element
+            n_atoms = sum(map(int, f.readlines()[6].split()))
+            if self.v: print "{0}n_atoms: {1}".format(self.pad, n_atoms)
+        self.n_atoms = n_atoms
 
-    #TODO: fix regex to find last
-    rex = '(?P<n>[0-9]+)\s*' # convergence number
-    rex += 'F=\s*(?P<F>{num})\s*' # total free energy
-    rex += 'E0=\s*(?P<E0>{num})\s*' # energy for sigma -> 0
-    rex += '(?:d E =\s*(?P<dE>{num})\s*)?' # E diff between this and last step
-    rex += '(?:mag=\s*(?P<m>{num})\s*)?' # mag
-    rex = rex.format(num='[+\-.0-9E]+')
-    if v>1: print '  regex:', rex
-    regex = re.compile(rex)
-    with open(file_path, 'r') as f:
-        text = f.read()
-        if v: print '  .. file loaded.\n  len(text):', len(text)
-    with open(POSCAR_path, 'r') as f:
-        n_atoms = f.readlines()[6]
-        if v: print '  n_atoms =', n_atoms
-    matches = [m for m in regex.finditer(text)]
-    #FIX for when empty matches
-    if not matches: return 0.0
-    if v>2: print '  mathces:', matches
-    if v: print '  {0} matches found'.format(len(matches))
-    last_match = matches[-1]
-    res =  last_match.groupdict()
-    if v: print '  last match:', res
-    return float(res['F'])/float(n_atoms)
-    
-def compare(*args, **kw):
-    # returns str of list of filename energy for every sub directory
-    v = kw.get('v', False)
-    a = kw.get('a', True)
-    cwd = os.getcwd()
-    if v: print '  cwd:', cwd
-    nam = kw.get('f', 'OSZICAR')
-    POSCAR = kw.get('POSCAR', 'POSCAR')
-    if a:
-        args = (path[len(cwd) + 1:] for path, dirs, nams in os.walk(cwd) 
-                if nam in nams and not kw.get('not', '\t') in path)
-    else:
-        args = [cwd]
-    args = list(args)
-    if v: print 'directories:', args
-    res = {}
-    pad = 0
-    for f_path in args:
-        if v: '  f_path:', f_path
-        pad = max(pad, len(f_path))
-        kw['f'] = getPath(nam, f_path=f_path)
-        kw['POSCAR'] = getPath(POSCAR, f_path=f_path)
-        res[f_path] = chk(**kw)
-    txt = ''
-    #for f_path, f_energy in sorted(res.iteritems(), key=lambda x: x[1]):
-    #    txt += ('{0:'+str(pad)+'.'+str(pad)+'}:'+
-    #           '{1:14.7f}').format(f_path[-pad:], f_energy)
-    txt = '\n'.join([('{0:'+str(pad)+'.'+str(pad)+'}'+
-                      '{1:14.7f}').format(f_path[-pad:], f_energy)
-                      for f_path, f_energy in sorted(res.iteritems(),
-                                                     key=lambda x: x[1])])
-    return txt
+    def _readOSZICAR(self):
+        # regex to get data
+        rex = '(?P<n>[0-9]+)\s*' # convergence number
+        rex += 'F=\s*(?P<F>{num})\s*' # total free energy
+        rex += 'E0=\s*(?P<E0>{num})\s*' # energy for sigma -> 0
+        rex += '(?:d E =\s*(?P<dE>{num})\s*)?' # E diff
+        rex += '(?:mag=\s*(?P<m>{num})\s*)?' # mag
+        rex = rex.format(num='[+\-.0-9E]+')
+        if self.v>2: print "{0}regex: {1}".format(self.pad, rex)
+        regex = re.compile(rex)
+        # read file
+        try:
+            self._search('OSZICAR', regex)
+        #TODO: distinguish between no file and no match?
+        except IOError:
+            if self.v: print "ERROR, no matches found."
+            self.F = 0
+            self.n = 0
+            self.dE = 0
+            self.E0 = 0
+            self.m = 0
 
-def getEnergies(*args, **kw):
-    return [float(vals.split(':')[1])
-            for vals in compare(*args, **kw).replace(' ', '').split()]
-
-def substract(*args, **kw):
-    # to calculate binding energy
-    v = kw.get('v', False)
-    bind = kw.get('bind', False)
-
-    if bind:
-        data = {'cohesive': None, 'structs': {}}
-        for ix, nam in enumerate(args):
-            if ix==0:
-                data['cohesive'] = nam
-            else:
-                data['structs'][nam] = None
-        if data['cohesive']:
-            os.chdir(data['cohesive'])
-            cohEnergy = max(getEnergies(*args, **kw))
-            os.chdir(os.pardir)
-        for nam in data['structs'].iterkeys():
-            os.chdir(nam)
-            data['structs'][nam] = min(getEnergies(*args, **kw))
-            os.chdir(os.pardir)
-        res = '\n'.join(['{0} : {1:+4.7f}'.format(nam, cohEnergy - energy) 
-                         for nam, energy in data['structs'].iteritems()])
-    return res
-
-def main(*args, **kw):
-    v = kw['v']
-    cmd = args[0]
-    args = args[1:]
-    if v: print '  main args:', cmd, args
-
-    if cmd in 'replace':
-        replace(*args, **kw)
-
-    elif cmd in "chk check":
-        print chk(*args, **kw)
-
-    elif cmd in 'compare':
-        print compare(*args, **kw)
-
-    elif cmd in 'substract':
-        print substract(*args, **kw)
-
-if __name__=='__main__':
-    #TODO: add argparse
-    args = list(sys.argv[1:])
-    
-    v = False
-    kw = {'v': v}
-    flags = filter(lambda x: re.search('^-.+', x), args)
-    if '-v' in flags:
-        v = True 
-        print "args:", args
-    for flag in flags:
-        if '-v' in flag: # all
-            kw['v'] = flag.count('v')
-            del args[args.index(flag)]
-        elif '-f' in flag: # chk
-            ix = args.index(flag)
-            if v: print "-f index:", ix
-            del args[ix]
-            if v: print " args:", args
-            kw['f'] = args[ix]
-        elif '-d' in flag: # comp
-            kw['d'] = True
-            del args[args.index(flag)]
-        elif '-a' in flag: #compare
-            kw['a'] = True
-            del args[args.index(flag)]
-        elif '-bind' in flag: # substract
-            kw['bind'] = True
-            del args[args.index(flag)]
-        elif '-not' in flag: # chk, comp
-            ix = args.index(flag)
-            if v: print "-not index:", ix
-            del args[ix]
-            if v: print " args:", args
-            kw['not'] = args.pop(ix)
+    def _readOUTCAR(self):
+        # regex to get data
+        #TODO: read more data
+        rex = 'Total CPU time used \(sec\):\s*(?P<t>{num})' 
+        rex = rex.format(num='[+\-.0-9E]+')
+        if self.v>2: print "{0}regex: {1}".format(self.pad, rex)
+        regex = re.compile(rex)
+        # read file
+        try:
+            self._search('OUTCAR', regex)
+        #TODO: distinguish between no file and no match?
+        except IOError:
+            if self.v: print "ERROR, no matches found."
+            self.t = 0
+        
+    def _search(self, nam, regex):
+        pad = self.pad
+        v = self.v
+        path = self.getPath(nam)
+        with open(path, 'r') as f:
+            txt = f.read()
+            if v: print "{0}.. {1} loaded".format(pad, nam)
+        matches = [m for m in regex.finditer(txt)]
+        if not matches:
+            #TODO: distinguish between no file and no match?
+            raise IOError
+            #raise Exception('No matches found.')
+        if v: print '{0}{1} matches found'.format(pad, len(matches))
+        if v>1: print '{0}mathces: {1}'.format(pad, matches)
+        last_match = matches[-1].groupdict()
+        #TODO: store more matches?
+        #matches = [m.groupdict() for m in matches]
+        # ? self.matches += matches
+        # store last match
+        self.update(**last_match)
+        
+    #def compare(self, comp):
+    #    k = ""
+    #    if comp=="dE":
+    #        k = "dE"
+    #        
+    #    data = array([m.get(k, 0.0) for m in self.matches])
+    #    print data
             
-                
-    if kw['v']:
-        print '  args:', args 
-        print '  kwargs:', kw
-    main(*args, **kw)
+               
+    def getPath(self, nam):
+        return os.path.join(self.f_path, nam)
     
+    def update(self, **stuff):
+        #TODO: better way?
+        vars(self).update(**stuff)
+    
+    def vars(self):
+        return dict(vars(self))
+        
+    def get(self, key):
+        return self.vars()[key]
+        
+    def __str__(self):
+        res = ''
+        for k, v in self.vars.iteritems():
+            # unwanted keys
+            if k in 'vpad': continue
+            # wanted keys
+            if k in 'FadE0t':
+                res += "{0:>5}: {1:.3f}\n".format(k, float(v))
+            else:
+                res += "{0:>5}: {1}\n".format(k, v)
+        return res[:-1]
+#..
+
+class Compare(Calc):
+    def __init__(self, reps, pad='', *args, **kw):
+        """
+        Compares data in calcs in one dictionary
+        """
+        Calc.__init__(self, *args, **kw)
+        if self.v>1: print '{0}in compare'.format(pad)
+        if self.v: print '{0}f_path: {1}'.format(pad, self.f_path)
+        self.pad = pad
+        self.reps = reps
+        
+        self._run()
+        self._formatData()
+    
+    def _run(self):
+        self.calcs = []
+        # get dirs
+        dirs = next(os.walk(self.f_path))[1]
+        # ignore templates
+        if "template" in dirs: dirs.remove("template")
+        # sort list
+        try:
+            # mutate list
+            dirs.sort(key=float)
+        except ValueError:
+            dirs = sort(dirs)
+        if self.v: print "{0}dirs: {1}".format(self.pad, dirs)
+        # get data
+        for subdir in dirs:
+            if self.v: print "{0}in {1}".format(self.pad, subdir)
+            if subdir in self.ignore: continue
+            f_path = self.getPath(subdir)
+            calc = Check(f_path=f_path, pad=self.pad+'  ', v=self.v)
+            self.calcs.append(calc)
+            
+    def getPath(self, nam):
+        return os.path.join(self.f_path, nam)
+                           
+    def _formatData(self):
+        reps = self.reps
+        nams = []
+        vals = dict([(rep, []) for rep in reps])
+        for calc in self.calcs:
+            try:
+                nams.append(calc.nam)
+                for rep in reps:
+                    try:
+                        val = float(calc.get(rep))
+                    except AttributeError:
+                        if self.v:
+                            print "{0}{1} has no '{2}'".format(self.pad,
+                                                                calc.nam, rep)
+                        raise ZeroDivisionError
+                    if rep=="F": val /= calc.n_atoms
+                    vals[rep].append(val)
+            except ZeroDivisionError:
+                nams.pop()
+        if self.v>2:
+            print "{0}nams:     {1}".format(self.pad, nams)
+            for rep in reps:
+                print "{0}{1:<4}: {2}".format(self.pad, rep, vals[rep])
+        self.nams = nams
+        self.vals = vals
+        
+    def __str__(self):
+        #FORMAT for displaying
+        res = ""
+        for rep in self.reps:
+            data = array(self.vals[rep])
+            if rep=='F':
+                header = 'FEnergy'
+                data *= -1
+            elif rep=='t':
+                header = 'Time  s'
+            pos_data = data[data > 0.0]
+            if len(pos_data)==0:
+                if rep=='F':
+                    print "ERROR: all F >= 0."
+                elif rep=='t':
+                    print "ERROR: all t <= 0."
+                #TODO: display positive values for F?
+                maxV = 0
+                minV = 0
+            else:
+                maxV = max(pos_data)
+                minV = min(pos_data)
+            
+            relV = (data - minV) * 64 / (maxV - minV)
+            relV.clip(0)
+
+            if self.v>1: print data
+            
+            res += '  nam | {0} |'.format(header)
+            res += '\n'.join(['{0:>5} | {1:7.5f} |{2}'
+                              .format(nam, val, "*" * int(rV))
+                              for nam, val, rV in zip(self.nams, data, relV)])
+            res += ' '*16 + '-'*64 + '>'
+            res += ' '*14,
+            res += ''.join(["{0:<5.1f}".format(
+                            int((ix*(maxV - minV)/64) + minV))
+                            for ix in range(0,64,5)])
+            res += '\n'
+            
+        return res
+#..
+
+class Murnaghan(Calc):
+    def __init__(self, skip=0, plot=False, *args, **kw):
+        Calc.__init__(self, *args, **kw)
+        self.args = args
+        self.kw = kw
+        self.skip = skip
+        self.plot = plot
+        self._compare()
+        self.calc()
+    
+    def _compare(self):
+        comp = Compare(*self.args, **self.kw)
+        self.comp = comp
+        self.lenghts = array(map(lambda x: float(x), comp.nams))
+        self.vols = self.lenghts ** 3
+        self.energies = comp.vals['F']
+    
+    def calc(self):
+        v = self.vols
+        e = self.energies
+        n = len(e)
+        # make a vector to evaluate fits on with a lot of points so it looks smooth
+        vfit = linspace(min(v),max(v),100)
+        # parabolic fit
+        a,b,c = polyfit(v[:n - self.skip], e[:n - self.skip], 2)
+        # initial guesses
+        v0 = -b/(2*a)
+        e0 = a*v0**2 + b*v0 + c
+        b0 = 2*a*v0
+        bP = 4
+        # initial guesses in the same order used in the Murnaghan function
+        x0 = [e0, b0, bP, v0]
+        
+        murnpars, ier = leastsq(self.objective, x0, args=(e, v))
+        
+        self.murnpars = murnpars
+        
+        self.minE = murnpars[0]
+        self.minV = murnpars[3]
+        self.minLenght = self.minV**(1.0 / 3)
+        self.BULKeVA = murnpars[1]
+        self.BULKGPa = murnpars[1] * 160.21773
+        # more precise
+        def f(x):
+            return self.Murnaghan(self.murnpars, x)
+        
+        self.min = minimize_scalar(f)
+        
+        self.minE = self.min.fun
+        self.minV = self.min.x
+        self.minLenght = self.minV**(1.0 / 3)
+
+        if self.plot:
+            # now we make a figure summarizing the results
+            plt.plot(v,e,'ro')
+            plt.plot(vfit, self.Murnaghan(murnpars, vfit), label='Murnaghan fit')
+            plt.xlabel('Volume ($\AA^3$)')
+            plt.ylabel('Energy (eV)')
+            plt.legend(loc='best')
+            
+            # add some text to the figure in figure coordinates
+            ax = plt.gca()
+            plt.text(0.4,0.5,'Min volume = %1.2f $\AA^3$' % murnpars[3],
+                transform = ax.transAxes)
+            plt.text(0.1,0.6, ('Bulk modulus = %1.2f eV/$\AA^3$ = %1.2f GPa' % 
+                            (murnpars[1], murnpars[1]*160.21773)),
+                transform = ax.transAxes)
+            plt.show()
+        
+    
+    def Murnaghan(self, parameters, vol):
+        '''
+        given a vector of parameters and volumes, return a vector of energies.
+        equation From PRB 28,5480 (1983)
+        '''
+        E0 = parameters[0]
+        B0 = parameters[1]
+        BP = parameters[2]
+        V0 = parameters[3]
+
+        E = E0 + B0*vol/BP*(((V0/vol)**BP)/(BP-1)+1) - V0*B0/(BP-1.)
+
+        return E
+        
+    # we define an objective function that will be minimized
+    def objective(self, pars, y, x):
+        #we will minimize this function
+        err =  y - self.Murnaghan(pars, x)
+        return err
+        
+    def __str__(self):
+        res = "Minimum\n"
+        res += "lenght: {0:7.5f}  volume: {1:9.5f}  energy: {2:-6.3f}\n"
+        res += "Bulk Modulus: {3:6.3e} eV/A^3   {4:5.3f} GPa"
+        return res.format(self.minLenght, self.minV, self.minE,
+                           self.BULKeVA, self.BULKGPa, A=u"\u212B")
+
+
+def getArgs(argv=[]):
+    kw = {'description': '',
+          'formatter_class': argparse.ArgumentDefaultsHelpFormatter}
+    parser = argparse.ArgumentParser(**kw)
+    
+    opts = {('-v',): {'action':'count', 'help': 'verbosity',
+                      'default': 0},
+            ('--verb', '--verbose'): {'type': int, 'dest': 'v',
+                                      'default': 0},
+            ('-s', '--skip'): {'type': int, 'dest': 'skip',
+                               'default': 0, 'help': "only for Murnaghan."},
+            ('-p', '--path'): {'dest': 'f_path'},
+            ('-f', '--folder'): {'dest': 'f_path',
+                                 'default': os.getcwd()},
+            ('-i', '--ignore'): {'nargs': '+', 'dest': 'i', 'default': []},
+            ('--rep', '--reps', '--report'): {'nargs': '+', 'dest': 'reps',
+                                              'default': ['F', 't']},
+            ('-r', '--run'): {'action': 'store_true', 'dest': 'r', 
+                              'default': False},
+            ('-m', '--murnaghan'): {'action': 'store_true', 'default': False,
+                                    'dest': 'm'},
+            ('-g', '--graph', '--plot'): {'action': 'store_true',
+                                          'default': False, 'dest': 'plot'}
+           }
+    for arg, kwarg in opts.items():
+        parser.add_argument(*arg, **kwarg)
+    
+    args = vars(parser.parse_args(argv))
+    if args['v']: print 'args:', args
+    for k, v in dict(args).iteritems():
+        if v is None:
+            del args[k]
+    if args['v']>1: print "None's deleted", args
+    
+    return args
+    
+def main(argv=[]):
+    kwargs = getArgs(argv)
+    if kwargs['r']:
+        res = Check(**kwargs)
+        print res
+    elif kwargs['m']:
+        res = Murnaghan(**kwargs)
+        print res
+        print res.murnpars
+    else:
+        res = Compare(**kwargs)
+       
+        
+if __name__=='__main__':
+    main(sys.argv[1:])
