@@ -12,26 +12,28 @@ import matplotlib.pyplot as plt
 ########
 
 class Calc(object):
-    def __init__(self, f_path, v, i=[], *args, **kw):
+    def __init__(self, f_path, v, raw=False, i=[], *args, **kw):
         self.f_path = f_path
         self.nam = os.path.basename(f_path)
         self.ignore = i # ignored folders
         self.v = v # verbosity
+        self.raw = raw
 
 class Check(Calc):
     def __init__(self, pad='', *args, **kw):
         Calc.__init__(self, *args, **kw)
         if self.v>1: print '{0}in calc'.format(pad)
-        if self.v: print '{0}f_path: {1}'.format(pad, self.f_path)
-        self.pad = pad
-        
+        self.pad = pad + "  "
+        if self.v: print '{0}f_path: {1}'.format(self.pad, self.f_path)
+
         # get n_atoms
         self._readPOSCAR()
         # get energy data
         self._readOSZICAR()
         # get time data
         self._readOUTCAR()
-    
+        if self.v>1: print '{0}end calc'.format(self.pad[:-2])
+
     def _readPOSCAR(self):
         path = self.getPath('POSCAR')
         if self.v: print '{0}reading POSCAR'.format(self.pad)
@@ -44,7 +46,7 @@ class Check(Calc):
 
     def _readOSZICAR(self):
         # regex to get data
-        rex = '(?P<n>[0-9]+)\s*' # convergence number
+        rex = '(?P<n_iter>[0-9]+)\s*' # convergence number
         rex += 'F=\s*(?P<F>{num})\s*' # total free energy
         rex += 'E0=\s*(?P<E0>{num})\s*' # energy for sigma -> 0
         rex += '(?:d E =\s*(?P<dE>{num})\s*)?' # E diff
@@ -59,7 +61,7 @@ class Check(Calc):
         except IOError:
             if self.v: print "ERROR, no matches found."
             self.F = 0
-            self.n = 0
+            self.n_iter = 0
             self.dE = 0
             self.E0 = 0
             self.m = 0
@@ -67,7 +69,7 @@ class Check(Calc):
     def _readOUTCAR(self):
         # regex to get data
         #TODO: read more data
-        rex = 'Total CPU time used \(sec\):\s*(?P<t>{num})' 
+        rex = 'Total CPU time used \(sec\):\s*(?P<t>{num})'
         rex = rex.format(num='[+\-.0-9E]+')
         if self.v>2: print "{0}regex: {1}".format(self.pad, rex)
         regex = re.compile(rex)
@@ -78,7 +80,7 @@ class Check(Calc):
         except IOError:
             if self.v: print "ERROR, no matches found."
             self.t = 0
-        
+
     def _search(self, nam, regex):
         pad = self.pad
         v = self.v
@@ -93,45 +95,48 @@ class Check(Calc):
             #raise Exception('No matches found.')
         if v: print '{0}{1} matches found'.format(pad, len(matches))
         if v>1: print '{0}mathces: {1}'.format(pad, matches)
-        last_match = matches[-1].groupdict()
+        last_match = dict([(k, float(v))
+                           for k, v in  matches[-1].groupdict().iteritems()])
         #TODO: store more matches?
         #matches = [m.groupdict() for m in matches]
         # ? self.matches += matches
         # store last match
         self.update(**last_match)
-        
+        self.F_n = self.F / self.n_atoms
+
     #def compare(self, comp):
     #    k = ""
     #    if comp=="dE":
     #        k = "dE"
-    #        
+    #
     #    data = array([m.get(k, 0.0) for m in self.matches])
     #    print data
-            
-               
+
+
     def getPath(self, nam):
         return os.path.join(self.f_path, nam)
-    
+
     def update(self, **stuff):
         #TODO: better way?
         vars(self).update(**stuff)
-    
+
     def vars(self):
         return dict(vars(self))
-        
+
     def get(self, key):
         return self.vars()[key]
-        
+
     def __str__(self):
+        if self.raw: return str(self.vars())
         res = ''
-        for k, v in self.vars.iteritems():
+        for k, v in self.vars().iteritems():
             # unwanted keys
-            if k in 'vpad': continue
+            if k in 'vpadignore': continue
             # wanted keys
             if k in 'FadE0t':
-                res += "{0:>5}: {1:.3f}\n".format(k, float(v))
+                res += "{0:>7}: {1:.3f}\n".format(k, float(v))
             else:
-                res += "{0:>5}: {1}\n".format(k, v)
+                res += "{0:>7}: {1}\n".format(k, v)
         return res[:-1]
 #..
 
@@ -145,10 +150,10 @@ class Compare(Calc):
         if self.v: print '{0}f_path: {1}'.format(pad, self.f_path)
         self.pad = pad
         self.reps = reps
-        
+
         self._run()
         self._formatData()
-    
+
     def _run(self):
         self.calcs = []
         # get dirs
@@ -167,12 +172,12 @@ class Compare(Calc):
             if self.v: print "{0}in {1}".format(self.pad, subdir)
             if subdir in self.ignore: continue
             f_path = self.getPath(subdir)
-            calc = Check(f_path=f_path, pad=self.pad+'  ', v=self.v)
+            calc = Check(f_path=f_path, pad=self.pad+'  ', v=self.v, rew=self.raw)
             self.calcs.append(calc)
-            
+
     def getPath(self, nam):
         return os.path.join(self.f_path, nam)
-                           
+
     def _formatData(self):
         reps = self.reps
         nams = []
@@ -198,8 +203,10 @@ class Compare(Calc):
                 print "{0}{1:<4}: {2}".format(self.pad, rep, vals[rep])
         self.nams = nams
         self.vals = vals
-        
+
     def __str__(self):
+        if self.raw:
+            return str([str(rep) for rep in self.reps])
         #FORMAT for displaying
         res = ""
         for rep in self.reps:
@@ -221,23 +228,23 @@ class Compare(Calc):
             else:
                 maxV = max(pos_data)
                 minV = min(pos_data)
-            
+
             relV = (data - minV) * 64 / (maxV - minV)
             relV.clip(0)
 
-            if self.v>1: print data
-            
-            res += '  nam | {0} |'.format(header)
+            if self.v>1: print 'data to print:', data
+
+            res += '  nam | {0} |\n'.format(header)
             res += '\n'.join(['{0:>5} | {1:7.5f} |{2}'
                               .format(nam, val, "*" * int(rV))
                               for nam, val, rV in zip(self.nams, data, relV)])
-            res += ' '*16 + '-'*64 + '>'
-            res += ' '*14,
+            res += "\n" + ' '*16 + '-'*64 + '>\n'
+            res += ' '*14
             res += ''.join(["{0:<5.1f}".format(
                             int((ix*(maxV - minV)/64) + minV))
                             for ix in range(0,64,5)])
             res += '\n'
-            
+
         return res
 #..
 
@@ -250,14 +257,14 @@ class Murnaghan(Calc):
         self.plot = plot
         self._compare()
         self.calc()
-    
+
     def _compare(self):
         comp = Compare(*self.args, **self.kw)
         self.comp = comp
         self.lenghts = array(map(lambda x: float(x), comp.nams))
         self.vols = self.lenghts ** 3
         self.energies = comp.vals['F']
-    
+
     def calc(self):
         v = self.vols
         e = self.energies
@@ -273,11 +280,11 @@ class Murnaghan(Calc):
         bP = 4
         # initial guesses in the same order used in the Murnaghan function
         x0 = [e0, b0, bP, v0]
-        
+
         murnpars, ier = leastsq(self.objective, x0, args=(e, v))
-        
+
         self.murnpars = murnpars
-        
+
         self.minE = murnpars[0]
         self.minV = murnpars[3]
         self.minLenght = self.minV**(1.0 / 3)
@@ -286,9 +293,9 @@ class Murnaghan(Calc):
         # more precise
         def f(x):
             return self.Murnaghan(self.murnpars, x)
-        
+
         self.min = minimize_scalar(f)
-        
+
         self.minE = self.min.fun
         self.minV = self.min.x
         self.minLenght = self.minV**(1.0 / 3)
@@ -300,17 +307,17 @@ class Murnaghan(Calc):
             plt.xlabel('Volume ($\AA^3$)')
             plt.ylabel('Energy (eV)')
             plt.legend(loc='best')
-            
+
             # add some text to the figure in figure coordinates
             ax = plt.gca()
             plt.text(0.4,0.5,'Min volume = %1.2f $\AA^3$' % murnpars[3],
                 transform = ax.transAxes)
-            plt.text(0.1,0.6, ('Bulk modulus = %1.2f eV/$\AA^3$ = %1.2f GPa' % 
+            plt.text(0.1,0.6, ('Bulk modulus = %1.2f eV/$\AA^3$ = %1.2f GPa' %
                             (murnpars[1], murnpars[1]*160.21773)),
                 transform = ax.transAxes)
             plt.show()
-        
-    
+
+
     def Murnaghan(self, parameters, vol):
         '''
         given a vector of parameters and volumes, return a vector of energies.
@@ -324,13 +331,13 @@ class Murnaghan(Calc):
         E = E0 + B0*vol/BP*(((V0/vol)**BP)/(BP-1)+1) - V0*B0/(BP-1.)
 
         return E
-        
+
     # we define an objective function that will be minimized
     def objective(self, pars, y, x):
         #we will minimize this function
         err =  y - self.Murnaghan(pars, x)
         return err
-        
+
     def __str__(self):
         res = "Minimum\n"
         res += "lenght: {0:7.5f}  volume: {1:9.5f}  energy: {2:-6.3f}\n"
@@ -343,7 +350,7 @@ def getArgs(argv=[]):
     kw = {'description': '',
           'formatter_class': argparse.ArgumentDefaultsHelpFormatter}
     parser = argparse.ArgumentParser(**kw)
-    
+
     opts = {('-v',): {'action':'count', 'help': 'verbosity',
                       'default': 0},
             ('--verb', '--verbose'): {'type': int, 'dest': 'v',
@@ -356,8 +363,8 @@ def getArgs(argv=[]):
             ('-i', '--ignore'): {'nargs': '+', 'dest': 'i', 'default': []},
             ('--rep', '--reps', '--report'): {'nargs': '+', 'dest': 'reps',
                                               'default': ['F', 't']},
-            ('-r', '--run'): {'action': 'store_true', 'dest': 'r', 
-                              'default': False},
+            ('-r', '--raw'): {'action': 'store_true', 'dest': 'r',
+                              'default': False}, # raw, list type data
             ('-m', '--murnaghan'): {'action': 'store_true', 'default': False,
                                     'dest': 'm'},
             ('-g', '--graph', '--plot'): {'action': 'store_true',
@@ -365,28 +372,29 @@ def getArgs(argv=[]):
            }
     for arg, kwarg in opts.items():
         parser.add_argument(*arg, **kwarg)
-    
+
     args = vars(parser.parse_args(argv))
     if args['v']: print 'args:', args
     for k, v in dict(args).iteritems():
         if v is None:
             del args[k]
-    if args['v']>1: print "None's deleted", args
-    
+    if args['v']>1: print "None values deleted", args
+
     return args
-    
+
 def main(argv=[]):
     kwargs = getArgs(argv)
-    if kwargs['r']:
+    hasdirs = next(os.walk(kwargs['f_path']))[1]
+    if not hasdirs:
+        kwargs['pad'] = "  "
         res = Check(**kwargs)
-        print res
     elif kwargs['m']:
         res = Murnaghan(**kwargs)
-        print res
         print res.murnpars
     else:
         res = Compare(**kwargs)
-       
-        
+    print res
+
+
 if __name__=='__main__':
     main(sys.argv[1:])
