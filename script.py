@@ -131,7 +131,7 @@ class Check(Calc):
         res = ''
         for k, v in self.vars().iteritems():
             # unwanted keys
-            if k in 'vpadignore': continue
+            if k in 'vpadignoreraw': continue
             # wanted keys
             if k in 'FadE0t':
                 res += "{0:>7}: {1:.3f}\n".format(k, float(v))
