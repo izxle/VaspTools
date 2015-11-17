@@ -18,7 +18,7 @@ def getArgs(argv=[]):
                       'default': 0},
             ('--verb', '--verbose'): {'type': int, 'dest': 'v',
                                       'default': 0},
-            ('-p', '--pad'): {'dest': 'pad', 'default': '',
+            ('-p', '--pad'): {'dest': 'pad', 'default': '.draft',
                               'help':'extra text for output filename.'},
             ('-f', '--format'): {}
            }
@@ -39,6 +39,8 @@ def main(argv=[]):
 
     if format:
         atoms = read(nam, format=format)
+    elif "vasp" in nam or "POSCAR" in nam or "CONTCAR" in nam:
+        atoms = read(nam, format="vasp")
     else:
         atoms = read(nam)
     if v: print "-file loaded."
@@ -54,6 +56,3 @@ def main(argv=[]):
     atoms.set_constraint(constraint)
     if v: print "-constraints set."
     write('POSCAR' + pad, atoms, format='vasp', direct=True)
-
-if __name__ == '__main__':
-    main(argv[1:])
