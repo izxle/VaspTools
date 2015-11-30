@@ -12,12 +12,13 @@ import matplotlib.pyplot as plt
 ########
 
 class Calc(object):
-    def __init__(self, f_path, v, raw=False, i=[], *args, **kw):
+    def __init__(self, f_path, v, raw=False, i=[], reps=False, *args, **kw):
         self.f_path = f_path
         self.nam = os.path.basename(f_path)
         self.ignore = i # ignored folders
         self.v = v # verbosity
         self.raw = raw
+        self.reps = reps
 
 class Check(Calc):
     def __init__(self, pad='', *args, **kw):
@@ -35,8 +36,8 @@ class Check(Calc):
         if self.v>1: print '{0}end calc'.format(self.pad[:-2])
 
     def _readPOSCAR(self):
-        path = self.getPath('POSCAR')
-        if self.v: print '{0}reading POSCAR'.format(self.pad)
+        path = self.getPath('CONTCAR')
+        if self.v: print '{0}reading CONTCAR'.format(self.pad)
         with open(path, 'r') as f:
             #TODO: read more data
             # like how many atoms from which element
@@ -88,17 +89,24 @@ class Check(Calc):
         with open(path, 'r') as f:
             txt = f.read()
             if v: print "{0}.. {1} loaded".format(pad, nam)
-        matches = [m for m in regex.finditer(txt)]
+        matches = [{k: v for k, v in m.groupdict().iteritems() if not v is None}
+                   for m in regex.finditer(txt)]
         if not matches:
             #TODO: distinguish between no file and no match?
             raise IOError
             #raise Exception('No matches found.')
         if v: print '{0}{1} matches found'.format(pad, len(matches))
-        if v>1: print '{0}mathces: {1}'.format(pad, matches)
+        if v>2:
+            print '{0}matches:'.format(pad)
+            pad += "  "
+            for m in matches:
+                for k, v in m.iteritems():
+                    print '{0}{k}: {v}'.format(pad, k=k, v=v)
+                print "-----"
         last_match = dict([(k, float(v))
-                           for k, v in  matches[-1].groupdict().iteritems()])
+                           for k, v in  matches[-1].iteritems()])
         #TODO: store more matches?
-        #matches = [m.groupdict() for m in matches]
+        self.matches = matches
         # ? self.matches += matches
         # store last match
         self.update(**last_match)
@@ -129,15 +137,21 @@ class Check(Calc):
     def __str__(self):
         if self.raw: return str(self.vars())
         res = ''
-        for k, v in self.vars().iteritems():
-            # unwanted keys
-            if k in 'vpadignoreraw': continue
-            # wanted keys
-            if k in 'FadE0t':
-                res += "{0:>7}: {1:.3f}\n".format(k, float(v))
-            else:
-                res += "{0:>7}: {1}\n".format(k, v)
-        return res[:-1]
+        if self.reps:
+            res += '\n'.join(['\n'.join(["{:>7}: {}".format(m['n_iter'], m[r])
+                                         for r in self.reps])
+                              for m in self.matches])
+        else:
+            for k, v in self.vars().iteritems():
+                # unwanted keys
+                if k in 'vpadignoreraw': continue
+                # wanted keys
+                if k in 'FadE0t':
+                    res += "{0:>7}: {1:.3f}\n".format(k, float(v))
+                else:
+                    res += "{0:>7}: {1}\n".format(k, v)
+            res.pop()
+        return res
 #..
 
 class Compare(Calc):
