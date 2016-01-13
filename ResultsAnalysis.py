@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+#!/bin/env/ python
+
+# TODO: replace my functions with ones from ASE
+
 from numpy import sort, array, polyfit
 import sys, os, re
 import argparse
@@ -8,17 +12,19 @@ import argparse
 #REMOVE @ PC-YLN-U
 from numpy import linspace
 from scipy.optimize import leastsq, minimize_scalar
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 ########
 
 class Calc(object):
-    def __init__(self, f_path, v, raw=False, i=[], reps=False, *args, **kw):
+    def __init__(self, f_path, v, raw=False, i=[], reps=[], subdir='',
+                 *args, **kw):
         self.f_path = f_path
-        self.nam = os.path.basename(f_path)
+        self.nam = os.path.basename(f_path.rstrip('/\\'+subdir))
         self.ignore = i # ignored folders
         self.v = v # verbosity
         self.raw = raw
         self.reps = reps
+        self.subdir = subdir
 
 class Check(Calc):
     def __init__(self, pad='', *args, **kw):
@@ -36,8 +42,11 @@ class Check(Calc):
         if self.v>1: print '{0}end calc'.format(self.pad[:-2])
 
     def _readPOSCAR(self):
-        path = self.getPath('CONTCAR')
-        if self.v: print '{0}reading CONTCAR'.format(self.pad)
+        #TODO: ignore comments
+        #path = self.getPath('CONTCAR')
+        #if self.v: print '{0}reading CONTCAR'.format(self.pad)
+        path = self.getPath('POSCAR')
+        if self.v: print '{0}reading POSCAR'.format(self.pad)
         with open(path, 'r') as f:
             #TODO: read more data
             # like how many atoms from which element
@@ -47,12 +56,12 @@ class Check(Calc):
 
     def _readOSZICAR(self):
         # regex to get data
-        rex = '(?P<n_iter>[0-9]+)\s*' # convergence number
-        rex += 'F=\s*(?P<F>{num})\s*' # total free energy
-        rex += 'E0=\s*(?P<E0>{num})\s*' # energy for sigma -> 0
-        rex += '(?:d E =\s*(?P<dE>{num})\s*)?' # E diff
-        rex += '(?:mag=\s*(?P<m>{num})\s*)?' # mag
-        rex = rex.format(num='[+\-.0-9E]+')
+        rex = '(?:[A-Z]{3}:\s*(?P<n>[0-9]+)[+\-.0-9E ]+\s*)?' # steps
+        rex += '(?P<n_iter>[0-9]+)\s*' # convergence number
+        rex += 'F=\s*(?P<F>[+\-.0-9E]+)\s*' # total free energy
+        rex += 'E0=\s*(?P<E0>[+\-.0-9E]+)\s*' # energy for sigma -> 0
+        rex += '(?:d E =\s*(?P<dE>[+\-.0-9E]+)\s*)?' # E diff
+        rex += '(?:mag=\s*(?P<m>[+\-.0-9E]+)\s*)?' # mag
         if self.v>2: print "{0}regex: {1}".format(self.pad, rex)
         regex = re.compile(rex)
         # read file
@@ -103,15 +112,15 @@ class Check(Calc):
                 for k, v in m.iteritems():
                     print '{0}{k}: {v}'.format(pad, k=k, v=v)
                 print "-----"
-        last_match = dict([(k, float(v))
-                           for k, v in  matches[-1].iteritems()])
-        #TODO: store more matches?
-        self.matches = matches
-        # ? self.matches += matches
+        last_match = dict([(k, float(val))
+                           for k, val in  matches[-1].iteritems()])
+        if v>3: print "last_match:", last_match
         # store last match
         self.update(**last_match)
-        self.F_n = self.F / self.n_atoms
-
+        # store more matches
+        if nam=='OSZICAR':
+            self.matches = matches
+            self.F_n = self.F / self.n_atoms
     #def compare(self, comp):
     #    k = ""
     #    if comp=="dE":
@@ -138,24 +147,31 @@ class Check(Calc):
         if self.raw: return str(self.vars())
         res = ''
         if self.reps:
-            res += '\n'.join(['\n'.join(["{:>7}: {}".format(m['n_iter'], m[r])
-                                         for r in self.reps])
-                              for m in self.matches])
+            min_lenght = 6
+            for r in self.reps:
+                lenght = max(min_lenght, len(str(self.matches[0][r])))
+                res += ('{:>'+str(lenght)+'}').format(r) + " "
+            res += "\n"
+            for m in self.matches:
+                for r in self.reps:
+                    lenght = max(min_lenght, len(m[r]))
+                    res += ('{:>'+str(lenght)+'}').format(m[r]) + " "
+                res += "\n"
         else:
             for k, v in self.vars().iteritems():
                 # unwanted keys
-                if k in 'vpadignoreraw': continue
+                if k in 'vpadignorerawmatchesreps' and k != 't': continue
                 # wanted keys
                 if k in 'FadE0t':
                     res += "{0:>7}: {1:.3f}\n".format(k, float(v))
                 else:
                     res += "{0:>7}: {1}\n".format(k, v)
-            res.pop()
+            res = res[:-1]
         return res
 #..
 
 class Compare(Calc):
-    def __init__(self, reps, pad='', *args, **kw):
+    def __init__(self, pad='', *args, **kw):
         """
         Compares data in calcs in one dictionary
         """
@@ -163,7 +179,6 @@ class Compare(Calc):
         if self.v>1: print '{0}in compare'.format(pad)
         if self.v: print '{0}f_path: {1}'.format(pad, self.f_path)
         self.pad = pad
-        self.reps = reps
 
         self._run()
         self._formatData()
@@ -185,12 +200,13 @@ class Compare(Calc):
         for subdir in dirs:
             if self.v: print "{0}in {1}".format(self.pad, subdir)
             if subdir in self.ignore: continue
-            f_path = self.getPath(subdir)
-            calc = Check(f_path=f_path, pad=self.pad+'  ', v=self.v, rew=self.raw)
+            f_path = self.getPath(subdir, self.subdir)
+            calc = Check(f_path=f_path, pad=self.pad+'  ',
+                         v=self.v, raw=self.raw, subdir=self.subdir)
             self.calcs.append(calc)
 
-    def getPath(self, nam):
-        return os.path.join(self.f_path, nam)
+    def getPath(self, nam, subdir=''):
+        return os.path.join(self.f_path, os.path.join(nam, subdir))
 
     def _formatData(self):
         reps = self.reps
@@ -207,7 +223,7 @@ class Compare(Calc):
                             print "{0}{1} has no '{2}'".format(self.pad,
                                                                 calc.nam, rep)
                         raise ZeroDivisionError
-                    if rep=="F": val /= calc.n_atoms
+                    #if rep == "F_n": val /= calc.n_atoms
                     vals[rep].append(val)
             except ZeroDivisionError:
                 nams.pop()
@@ -225,14 +241,14 @@ class Compare(Calc):
         res = ""
         for rep in self.reps:
             data = array(self.vals[rep])
-            if rep=='F':
+            if rep == 'F' or rep == 'F_n':
                 header = 'FEnergy'
                 data *= -1
-            elif rep=='t':
+            elif rep == 't':
                 header = 'Time  s'
             pos_data = data[data > 0.0]
             if len(pos_data)==0:
-                if rep=='F':
+                if rep == 'F' or rep == 'F_n':
                     print "ERROR: all F >= 0."
                 elif rep=='t':
                     print "ERROR: all t <= 0."
@@ -371,12 +387,14 @@ def getArgs(argv=[]):
                                       'default': 0},
             ('-s', '--skip'): {'type': int, 'dest': 'skip',
                                'default': 0, 'help': "only for Murnaghan."},
-            ('-p', '--path'): {'dest': 'f_path'},
+            ('-p', '--path'): {'dest': 'f_path', 'default': os.getcwd()},
             ('-f', '--folder'): {'dest': 'f_path',
                                  'default': os.getcwd()},
+            ('--sd', '--subdir', '--sub-directory'): {'dest': 'subdir',
+                                                      'default': ''},
             ('-i', '--ignore'): {'nargs': '+', 'dest': 'i', 'default': []},
             ('--rep', '--reps', '--report'): {'nargs': '+', 'dest': 'reps',
-                                              'default': ['F', 't']},
+                                              'default': []},
             ('-r', '--raw'): {'action': 'store_true', 'dest': 'r',
                               'default': False}, # raw, list type data
             ('-m', '--murnaghan'): {'action': 'store_true', 'default': False,
@@ -406,6 +424,8 @@ def main(argv=[]):
         res = Murnaghan(**kwargs)
         print res.murnpars
     else:
+        if not kwargs['reps']:
+            kwargs['reps'] = ['F', 't']
         res = Compare(**kwargs)
     print res
 
