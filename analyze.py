@@ -44,6 +44,7 @@ def getArgs(argv=[]):
     parsadd.add_argument('+b', '++bulk', default='')
     parsadd.add_argument('+a','++ads', default='')
     parsadd.add_argument('++area', nargs='?', type=float, default=0, const=True)
+    parsadd.add_argument('+v', action='count', default=0)
 
     if args['ads']: args['ads'] = vars(parsadd.parse_args(args['ads']))
 
@@ -63,10 +64,10 @@ def main(argv=[]):
     res = info
     # data analysis
     if kwargs['ads']:
-        res = AdsEnergy(info, parts=kwargs['ads'], v=kwargs['v'])
+        res = Ediff(info, parts=kwargs['ads'], v=kwargs['v'])
     # output
 
-    print res
+    print str(res)
 
 
 if __name__=='__main__':
