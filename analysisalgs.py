@@ -6,7 +6,7 @@ class Ediff(object):
         self.complet = complet
         self.v = v
         # modifyers
-        self.area = parts.get('area', False)
+        self.area = parts.pop('area', False)
         # calc
         self._get_data_from_parts(parts)
         # run
@@ -34,8 +34,11 @@ class Ediff(object):
         # sum relative energy of parts
         parts_energy = 0
         for nam, part in self.parts.iteritems():
-            elm, num = part['ratio']
-            ratio = complet.elements.get(elm) / float(num)
+            if part['ratio']:
+                elm, num = part['ratio']
+                ratio = complet.elements.get(elm) / float(num)
+            else:
+                ratio = 1
             relE = part['energy'] * ratio
             self.parts[nam]['relE'][complet.nam] = relE
             parts_energy += relE
@@ -74,11 +77,11 @@ class Ediff(object):
         for nam, val in self.res.iteritems():
             res += "{:12}: {:11.5f}\n".format(nam, val['Ediff'])
             if self.rep:
-               res += "  {:10}: {:11.5f}\n".format(nam, val['complet'])
-               for part_nam, part in self.parts.iteritems():
-                   res += "  {:10}: {:11.5f}\n".format(part_nam,
-                                                       part['relE'][nam])
-            if self.area:
-               res += "  {:10}: {:11.5f}\n".format("area", val['area'])
+                res += "  {:10}: {:11.5f}\n".format(nam, val['complet'])
+                for part_nam, part in self.parts.iteritems():
+                    res += "  {:10}: {:11.5f}\n".format(part_nam,
+                                                        part['relE'][nam])
+                if self.area:
+                    res += "  {:10}: {:11.5f}\n".format("area", val['area'])
             res += "\n"
         return res[:-2]
