@@ -51,11 +51,16 @@ class Check(object):
 
     def _readOSZICAR(self):
         # regex to get data
-        rex = '(?:[A-Z]{3}:\s*(?P<n>[0-9]+)[+\-.0-9E ]+\s*)?' # steps
-        rex += '(?P<n_iter>[0-9]+)\s*' # convergence number
-        rex += 'F=\s*(?P<F>[+\-.0-9E]+)\s*' # total free energy
+        rex = '(?:[A-Z]{3}:\s*(?P<e_step>[0-9]+)[+\-.0-9E ]+\s*)?' #
+        rex += '(?P<io_step>[0-9]+)\s*' # ionic step
+        rex += '(?:T=\s*(?P<Temp>[.0-9]+)\s*)?' # Temp
+        rex += '(?:E=\s*(?P<E>[+\-.0-9E]+)\s*)?' # Total E (+Kinetic)
+        rex += 'F=\s*(?P<F>[+\-.0-9E]+)\s*' # Total Free Energy
         rex += 'E0=\s*(?P<E0>[+\-.0-9E]+)\s*' # energy for sigma -> 0
         rex += '(?:d E =\s*(?P<dE>[+\-.0-9E]+)\s*)?' # E diff
+        rex += '(?:EK=\s*(?P<EK>[+\-.0-9E]+)\s*)?' # Kinetic Energy
+        rex += '(?:SP=\s*(?P<SP>[+\-.0-9E]+)\s*)?' # thermostat PE
+        rex += '(?:SK=\s*(?P<SK>[+\-.0-9E]+)\s*)?' # thermostat KE
         rex += '(?:mag=\s*(?P<m>[+\-.0-9E]+)\s*)?' # magnetic
         if self.v>2: print "{0}regex: {1}".format(self.pad, rex)
         regex = compile(rex)
@@ -148,10 +153,12 @@ class Check(object):
                     res += ('{:>'+str(lenght)+'}').format(m[r]) + " "
                 res += "\n"
         else:
+            not_float = ['io_step', 'nam', 'n_atoms', 'subdir', 'e_step', 't']
+            to_float = ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE']
             for k, v in self.vars().iteritems():
-                if k in 'n_iternamn_atomsubdir':
+                if k in not_float:
                     res += "{0:>7}: {1}\n".format(k, v)
-                elif k in 'F_ndE0tmarea':
+                elif k in 'F_ndE0tmareaTemp':
                     res += "{0:>7}: {1:.3f}\n".format(k, float(v))
             res = res[:-1]
         return res
