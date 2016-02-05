@@ -15,6 +15,10 @@ Scripts I use to have a better experience with file manipulation and data analys
 
 *slab.py* - Creates an fcc (111) structure with desired amount of vacuum and fixed layers.
 
+###### Other
+
+*convert.py* - Convert between multiple file types (supported by ASE).
+
 ---
 
 I will modify them as new functionality is needed.
