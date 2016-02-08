@@ -1,4 +1,4 @@
-# tools
+# Vasp tools
 Scripts I use to have a better experience with file manipulation and data analysis of VASP input and output files.
 
 ###### Output files
@@ -18,6 +18,8 @@ Scripts I use to have a better experience with file manipulation and data analys
 ###### Other
 
 *convert.py* - Convert between multiple file types (supported by ASE).
+
+    convert.py [file] [new_format] [-f old_format] [--name new_name]
 
 ---
 
