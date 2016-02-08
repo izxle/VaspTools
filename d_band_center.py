@@ -124,24 +124,35 @@ def get_band_centers(data, orbital):
 def getArgs(args):
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     nam = 'DOSCAR'
-    parser.add_argument('file', nargs='?', default=nam)
+    parser.add_argument('file', nargs='?', default=nam,
+                        help='name of the DOS file to read')
     parser.add_argument('orbital', nargs='?', default="d")
-    parser.add_argument('--sum')
+    parser.add_argument('--sum',
+                        help='name of the DOS.SUM file to use')
+    parser.add_argument('--sum-name', dest='sum_name',
+                        help='Identifier for the DOS.SUM file to be written')
     parser.add_argument('-n', nargs='+', default = [],
-                        help='The number of the atoms to be read')
+                        help='The index number of the atoms to be read')
     parser.add_argument('-l', nargs='+', default = [],
                         help='Read info of atoms in selected layers')
     parser.add_argument('--layers', type=int, default = 4,
                         help='Number of layers in structure')
-    parser.add_argument('-f', default=getcwd(), help='directory where script will be ran')
+    parser.add_argument('-f', default=getcwd(),
+                        help='directory where script will be ran')
+    parser.add_argument('--write', action='store_true', default=False,
+                        help='write a DOSi file for each atom')
 
     if args:
         res = parser.parse_args(args.split())
     else:
         res = parser.parse_args()
     
+    pre = res.f
+    res.file = path.join(pre, res.file)
+    
     if res.l:
         nam = 'CONTCAR' if 'CONTCAR' in listdir(res.f) else 'POSCAR'
+        nam = path.join(pre, nam)
         struct = read(nam)
         max_val = max([a.z for a in struct])
         th = max_val / res.layers
@@ -182,7 +193,9 @@ def main(argv=None):
             atoms = None
         else:
             atoms, s_atoms = parseIntSet(args.n)
-        DOSdata = getDOSdata(args.file, atoms)
+        DOSdata = getDOSdata(args.file, atoms, args.write)
+        if args.sum_name:
+            s_atoms = args.sum_name
         sum_file = path.join(args.f, 'DOS.SUM.' + s_atoms)
         writeDosSum(DOSdata, sum_file)
         
