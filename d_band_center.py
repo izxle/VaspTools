@@ -3,7 +3,10 @@
 from os import path, getcwd, listdir
 import numpy as np
 import argparse
-from ase.io import read
+try:
+    from ase.io import read
+except ImportError:
+    print "This computer doesn't have ASE installed."
 
 def getDOSdata(nam, atoms, write=False):
     with open(nam, "r") as f:
@@ -133,7 +136,7 @@ def getArgs(args):
                         help='Identifier for the DOS.SUM file to be written')
     parser.add_argument('-n', nargs='+', default = [],
                         help='The index number of the atoms to be read')
-    parser.add_argument('-l', nargs='+', default = [],
+    parser.add_argument('-l', nargs='+', default = [], type=int,
                         help='Read info of atoms in selected layers')
     parser.add_argument('--layers', type=int, default = 4,
                         help='Number of layers in structure')
