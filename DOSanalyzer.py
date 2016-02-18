@@ -128,8 +128,6 @@ class DOS(object):
                 else:
                     res[o]['sum'] = np.zeros(ne)
                     res[o]['cumsum'] = np.zeros(ne)
-        print np.add.reduce(res['d']['sum'][1])
-        print np.add.reduce(res['d']['sum'][-1])
         # sum total l data
         for i in self.atoms:
             for o, l in zip(self.orbitals, self.l):
@@ -156,8 +154,6 @@ class DOS(object):
                     else:
                         res[o]['sum'] += self.data[i][l]
                         res[o]['cumsum'] += np.sumsum(data[l])
-        print np.add.reduce(res['d']['sum'][1])
-        print np.add.reduce(res['d']['sum'][-1])
         # get total sum data & cumsum
         if self.s:
             ix = iter(xrange(1, 5))
@@ -193,6 +189,28 @@ class DOS(object):
         else:
             return self.data[l]['center']
         return res
+
+    def plot(self, orbitals):
+        color = {'s': 'blue',
+                 'p': 'green',
+                 'd': 'red',
+                 'sum': 'black'}
+        if self.s:
+            for orb in orbitals:
+                for s in self.s:
+                    x = self.eV
+                    if orb != 'sum':
+                        y = self.data[orb]['sum'][s]
+                    else:
+                        y = self.data[orb][s]
+                    kw = {'color': color[orb]}
+                    if s == 1:
+                        kw['label'] = orb
+                    plt.plot(x, y, **kw)
+        plt.xlabel('E - Ef (eV)')
+        plt.ylabel('DOS')
+        plt.legend()
+        plt.show()
 #..
 
 def parse_int_set(inp):
@@ -263,14 +281,13 @@ def get_args(args):
                         help='directory where script will be ran')
     parser.add_argument('--dbc', '--d-band-center', action='store_true',
                         default=False, dest='dbc',
-                        help='write a DOSi file for each atom')
+                        help='')
     parser.add_argument('--write', action='store_true', default=False,
                         help='write a DOSi file for each atom')
-    parser.add_argument('--overwrite', action='store_true', default=False,
-                        help='overwrite DOS.SUM file')
-    parser.add_argument('-g', '--graph', '--plot', action='store_true',
-                        default=False, dest='plot',
+    parser.add_argument('-g', '--graph', '--plot', nargs='*',
+                        default=None, dest='plot',
                         help='plot DOS for the specified orbitals')
+    parser.add_argument('-v', action='count', default=0)
 
     if args:
         res = parser.parse_args(args.split())
@@ -284,19 +301,35 @@ def get_args(args):
         nam = 'CONTCAR' if 'CONTCAR' in res.listdir else 'POSCAR'
         nam = path.join(pre, nam)
         struct = read(nam)
+        min_val = ''
+        c = struct.get_cell()[2][2]
+        for a in struct:
+            z = a.z
+            if z / c > 0.85:
+                a.z = z - 1
+            min_val = min(a.z, min_val)
+        struct.translate((0, 0, -1 * min_val))
         max_val = max([a.z for a in struct])
         th = max_val / res.layers
         struct.set_tags([min(int(a.z / th) + 1, res.layers) for a in struct])
         res.n = [a.index + 1 for a in struct if a.tag in res.l]
     elif res.n:
         res.n = parse_int_set(res.n)
+        
+    if res.plot == []:
+        res.plot = ['s', 'p', 'd', 'f', 'sum']
     return res
     
 def main(argv=None):
     args = get_args(argv)
+    if args.v:
+        print args.n
     obj = DOS(atoms=args.n, dos_file_name=args.file)
     if args.dbc:
         print obj.get_band_center('d')
+    if args.plot:
+        obj.plot(args.plot)
+    return obj
         
 if __name__ == '__main__':
-    main('DOSCAR_Fe --dbc -f testDOS -n 1-10')
+    main()
