@@ -10,9 +10,9 @@ def getArgs(args=None):
     for nam in ['CONTCAR', 'POSCAR']:
         if nam in nams: break
     parser.add_argument('file', nargs='?', default=nam, help='old name')
-    parser.add_argument('format', nargs='?', default='cif')
+    parser.add_argument('format', nargs='?', default='cif', help='new format')
     parser.add_argument('name', nargs='?', default=None, help='new name')
-    parser.add_argument('-f')
+    parser.add_argument('-f', help='old format')
     if args:
         res = parser.parse_args(args.split())
     else:
@@ -23,7 +23,6 @@ def getArgs(args=None):
 
 def main(argv=None):
     args = getArgs(argv)
-    nam = '{}.{}'.format(args.file, args.format)
     if args.f:
         struct = read(args.file, format=args.f)
     else:
@@ -33,7 +32,8 @@ def main(argv=None):
         kw['sort'] = True
         kw['vasp5'] = True
         kw['direct'] = True
-    write(args.name, struct, **kw)
+    nam = '{}.{}'.format(args.name, args.format)
+    write(nam, struct, **kw)
 
 if __name__ == '__main__':
     main()
