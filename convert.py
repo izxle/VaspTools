@@ -11,14 +11,20 @@ def getArgs(args=None):
         if nam in nams: break
     parser.add_argument('file', nargs='?', default=nam, help='old name')
     parser.add_argument('format', nargs='?', default='cif', help='new format')
-    parser.add_argument('name', nargs='?', default=None, help='new name')
+    parser.add_argument('new_name', nargs='?', default=None, help='new_name.format')
     parser.add_argument('-f', help='old format')
+    parser.add_argument('-n', '--name', default=None, dest='name',
+                        help='overwrite new name')
     if args:
         res = parser.parse_args(args.split())
     else:
         res = parser.parse_args()
-    if not res.name:
-        res.name = res.file
+    if res.name:
+        res.nam = res.name
+    else:
+        if not res.new_name:
+            res.new_name = res.file
+        res.nam = '{}.{}'.format(res.new_name, res.format)
     return res
 
 def main(argv=None):
@@ -32,8 +38,7 @@ def main(argv=None):
         kw['sort'] = True
         kw['vasp5'] = True
         kw['direct'] = True
-    nam = '{}.{}'.format(args.name, args.format)
-    write(nam, struct, **kw)
+    write(res.nam, struct, **kw)
 
 if __name__ == '__main__':
     main()
