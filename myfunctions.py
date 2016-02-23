@@ -44,7 +44,13 @@ def correct_z(atoms):
         min_z = min(a.z, min_z)
     atoms.translate((0, 0, -1 * min_z))
     return atoms
-    
+
+def tag_layers(atoms, n_layers):
+    max_val = max([a.z for a in atoms])
+    th = max_val / n_layers
+    struct.set_tags([min(int(a.z / th) + 1, n_layers) for a in struct])
+    return atoms
+
 def fix_layers(atoms, fix, n_layers):
     from ase.constraints import FixAtoms
     # TODO: get number of layers automatically
