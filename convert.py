@@ -38,7 +38,7 @@ def main(argv=None):
         kw['sort'] = True
         kw['vasp5'] = True
         kw['direct'] = True
-    write(res.nam, struct, **kw)
+    write(args.nam, struct, **kw)
 
 if __name__ == '__main__':
     main()
