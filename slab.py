@@ -1,12 +1,13 @@
+#!/bin/env python
 
 import argparse
-from sys import argv
 from ase import Atoms
 from ase.constraints import FixAtoms
 from ase.lattice.surface import fcc111, add_adsorbate
 from ase.io import write
+from myfunctions import fix_layers, correct_z
 
-#TODO: add a vacuum by layer option
+#TODO: add vacuum by number of layers option
 
 def getArgs(argv=[]):
     kw = {'description': '',
@@ -14,50 +15,80 @@ def getArgs(argv=[]):
     parser = argparse.ArgumentParser(**kw)
 
     parser.add_argument('element', help='Symbol of element')
+    parser.add_argument('-s', '--size', nargs=3, type=int, default=[4,4,4],
+                        help='times unit cell is repeated in each direction')
+    parser.add_argument('-a', type=float, default=1.0,
+                        help='lattice constant a in Angstroms')
+    parser.add_argument('-c', type=float, default=1.0,
+                        help='lattice constant c in Angstroms')
+    parser.add_argument('-f', '--fix', type=int, default=2,
+                        help='number of layers to be fixed')
+    parser.add_argument('--layers', dest='n_layers', type=int, default=4,
+                        help='number of layers in slab')
+    parser.add_argument('--vac', '--vacuum', type=float, default=13.0,
+                        dest='vacuum',
+                        help='separation between slabs in Angstroms')
+    parser.add_argument('-o', '--orthogonal', action='store_true',
+                        default=False, help='build orthogonal cell')
+    parser.add_argument('--struct', '--structure', default='fcc',
+                        dest='struct', help='Face Centered Cubic')
+    parser.add_argument('--face', default='111',
+                        help='build orthogonal cell')
+    parser.add_argument('-p', '--pad', default='.draft',
+                        help='extra text for output filename')
+    
+    args = parser.parse_args(argv.split()) if argv else parser.parse_args()
 
-    opts = {('-v',): {'action':'count', 'help': 'verbosity',
-                      'default': 0},
-            ('--verb', '--verbose'): {'type': int, 'dest': 'v',
-                                      'default': 0},
-            ('-s', '--size'): {'nargs': 3, 'type': int,
-                               'default': [4, 4, 4]},
-            ('-a', '--lattice_constant'): {'type': float,
-                              'help': 'lattice constant in Angstroms'},
-            ('-f', '--fix'): {'type': int, 'default': 2,
-                              'help': 'Number of layer to be fixed'},
-            ('--vac', '--vacuum'): {'type': float, 'dest': 'vacuum',
-                                 'default': 10.0},
-            ('-o', '--orthogonal'): {'action': 'store_true',
-                                     'default': False},
-            ('-p', '--pad'): {'dest': 'pad', 'default': '',
-                              'help':'extra text for output filename.'}
-           }
-    for arg, kwarg in opts.iteritems():
-        parser.add_argument(*arg, **kwarg)
-
-    args = vars(parser.parse_args(argv))
-    if args['v']: print 'args:', args
     return args
 
+def slab(args):
+    structure = args.struct
+    face = args.face
+    kw = {'symbol': args.element,
+          'size': args.size,
+          'a': args.a,
+          'vacuum': args.vacuum / 2,
+          'orthogonal': args.orthogonal}
+          
+    if structure == 'fcc':
+        if face == '111':
+            atoms = fcc111(**kw)
+        elif face == '100':
+            atoms = fcc100(**kw)
+        elif face == '110':
+            atoms = fcc110(**kw)
+    elif structure == 'bcc':
+        if face == '111':
+            atoms = bcc111(**kw)
+        elif face == '100':
+            atoms = bcc100(**kw)
+        elif face == '110':
+            atoms = bcc110(**kw)
+    elif args.struct == 'hcp':
+        kw['c'] = args.c
+        if args.face == '0001':
+            atoms = hcp0001(**kw)
+        elif args.face == '10m10':
+            atoms = hcp10m10(**kw)
+            
+    return atoms
+    
 def main(argv=[]):
-    kwargs = getArgs(argv)
-    elm = kwargs['element']
-    a = kwargs['lattice_constant']
-    size = kwargs['size']
-    orth = kwargs['orthogonal']
-    vac = kwargs['vacuum'] / 2 # applies to both sides of the slab
-    fix = kwargs['fix']
-    pad = kwargs['pad']
-
-    slab = fcc111(elm, size=size, a=a, orthogonal=orth, vacuum=vac)
+    args = getArgs(argv)
+    # create slab
+    atoms = slab(args)
     # adjust cell
-    minA = min([p[2] for p in slab.get_positions() if p[2] > 0])
-    slab.translate((0, 0, -1 * minA))
+    atoms = correct_z(atoms)
     # set contraints
-    constraint = FixAtoms(mask=[a.tag < fix for a in slab])
-    slab.set_constraint(constraint)
+    atoms = fix_layers(atoms, args.fix, args.n_layers)
     # write POSCAR
-    write('POSCAR' + pad, slab, format='vasp', direct=True)
+    kw = {'format': 'vasp',
+          'sort': True,
+          'vasp5': True,
+          'direct': True}
+          
+    nam = 'POSCAR' + args.pad
+    write(nam, atoms, **kw)
 
 if __name__ == '__main__':
-    main(argv[1:])
+    main()
