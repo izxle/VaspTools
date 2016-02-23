@@ -3,7 +3,7 @@
 import argparse
 from ase import Atoms
 from ase.constraints import FixAtoms
-from ase.lattice.surface import fcc111, add_adsorbate
+from ase.lattice.surface import *
 from ase.io import write
 from myfunctions import fix_layers, correct_z
 
