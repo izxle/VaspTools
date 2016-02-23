@@ -1,58 +1,50 @@
 #!/bin/env python
 
 import argparse
-from sys import argv
+from os import listdir, getcwd
 from ase.io import read, write
 from ase.constraints import FixAtoms
 
 def getArgs(argv=[]):
-    kw = {'description': '',
-          'formatter_class': argparse.ArgumentDefaultsHelpFormatter}
-    parser = argparse.ArgumentParser(**kw)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('file', nargs='?', default='POSCAR', help='filename')
-    parser.add_argument('layers', nargs='?', type=int, default=2,
+    parser.add_argument('fix', nargs='?', type=int, default=2,
                         help='Number of layer to be fixed')
-
-    opts = {('-v',): {'action':'count', 'help': 'verbosity',
-                      'default': 0},
-            ('--verb', '--verbose'): {'type': int, 'dest': 'v',
-                                      'default': 0},
-            ('-p', '--pad'): {'dest': 'pad', 'default': '.draft',
-                              'help':'extra text for output filename.'},
-            ('-f', '--format'): {}
-           }
-    for arg, kwarg in opts.iteritems():
-        parser.add_argument(*arg, **kwarg)
-
-    args = vars(parser.parse_args(argv))
-    if args['v']: print 'args:', args
+    parser.add_argument('n_layers', nargs='?', type=int, default=4,
+                        help='Number of layer in slab')
+    parser.add_argument('-p', '--pad', default='.draft',
+                        help='extra text for output filename')
+    parser.add_argument('-f', '--format', default='vasp',
+                        help='format of file to read')
+    
+    args = parser.parse_args(argv.split()) if argv else parser.parse_args()
+    
+    if args.file not in listdir(getcwd()):
+        raise IOError('{} does not exist.'.format(args.file))
     return args
 
-def main(argv=[]):
-    kwargs = getArgs(argv)
-    nam = kwargs['file']
-    fix = kwargs['layers']
-    pad = kwargs['pad']
-    v = kwargs['v']
-    format = kwargs['format']
-
-    if format:
-        atoms = read(nam, format=format)
-    elif "vasp" in nam or "POSCAR" in nam or "CONTCAR" in nam:
-        atoms = read(nam, format="vasp")
-    else:
-        atoms = read(nam)
-    if v: print "-file loaded."
+def fix_layers(atoms, fix, n_layers):
+    # TODO: get number of layers automatically
     # TODO: ameliorate
-    layerz = {round(a.z, 2): None for a in atoms}
-    layerz_list = [None] + [z for z in sorted(layerz)]
-    if v: print "layerz list:", layerz_list
-    n_layers = len(layerz)
-    atoms.set_tags([layerz_list.index(round(a.z, 2)) for a in atoms])
-    if v: print "-tags set."
-    constraint = FixAtoms(mask=[a.tag <= fix for a in atoms])
-
+    factor = float(fix) / n_layers
+    max_z = max([a.z for a in atoms])
+    th = max_z * factor
+    constraint = FixAtoms(mask=[a.z <= th for a in atoms])
     atoms.set_constraint(constraint)
-    if v: print "-constraints set."
-    write('POSCAR' + pad, atoms, format='vasp', direct=True)
+    return atoms
+
+def main(argv=[]):
+    args = getArgs(argv)
+    
+    atoms = read(args.file, format=args.format)
+    
+    atoms = fix_layers(atoms, args.fix, args.n_layers)
+    
+    kw = {'format': 'vasp', 'direct': True, 'vasp5': True, 'sort':True}
+    write('POSCAR' + args.pad, atoms, **kw)
+    # TODO: add a chk for correct number of T's and F's
+
+if __name__ == '__main__':
+    main()
