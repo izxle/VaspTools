@@ -1,3 +1,5 @@
+import numpy as np
+
 class DOS(object):
     def __init__(self, atoms, dos_file_name):
         self._import_DOS_data(dos_file_name, atoms)
@@ -161,8 +163,8 @@ class DOS(object):
                    for s in self.s}
             res['avg'] = np.add.reduce(res.values()) / 2
         else:
-            res = (np.add.reduce(self.data[l]['sum'] * self.eV) /
-                   np.add.reduce(self.data[l]['sum']))
+            res = {'dbc': (np.add.reduce(self.data[l]['sum'] * self.eV) /
+                           np.add.reduce(self.data[l]['sum']))
         self.data[l]['center'] = res
     
     def get_band_center(self, l, s=None):
@@ -173,7 +175,7 @@ class DOS(object):
             assert s in self.s, 's must be in {}'.format(self.s)
             res = self.data[l]['center'][s]
         else:
-            res = {' ': self.data[l]['center']}
+            res = self.data[l]['center']
         return res
 
     def plot(self, orbitals):
