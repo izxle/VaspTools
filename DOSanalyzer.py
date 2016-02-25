@@ -71,7 +71,9 @@ def main(argv=None):
         print args.n
     obj = DOS(atoms=args.n, dos_file_name=args.file)
     if args.dbc:
-        print obj.get_band_center('d')
+        dbc = obj.get_band_center('d')
+        for k, v in dbc.iteritems():
+            print '{:>3}: {:9.5f}'.format(k, v)
     if args.plot:
         obj.plot(args.plot)
     return obj
