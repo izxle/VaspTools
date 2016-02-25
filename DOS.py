@@ -173,7 +173,7 @@ class DOS(object):
             assert s in self.s, 's must be in {}'.format(self.s)
             res = self.data[l]['center'][s]
         else:
-            return self.data[l]['center']
+            res = {' ': self.data[l]['center']}
         return res
 
     def plot(self, orbitals):
