@@ -1,7 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class DOS(object):
     def __init__(self, atoms, dos_file_name):
+        self.plot_data = None
         self._import_DOS_data(dos_file_name, atoms)
         self._parse_DOS_data()
         
@@ -164,7 +166,7 @@ class DOS(object):
             res['avg'] = np.add.reduce(res.values()) / 2
         else:
             res = {'dbc': (np.add.reduce(self.data[l]['sum'] * self.eV) /
-                           np.add.reduce(self.data[l]['sum']))
+                           np.add.reduce(self.data[l]['sum']))}
         self.data[l]['center'] = res
     
     def get_band_center(self, l, s=None):
@@ -177,24 +179,56 @@ class DOS(object):
         else:
             res = self.data[l]['center']
         return res
+    
+    def get_data_val(self, keys):
+        res = dict(self.data)
+        for k in keys:
+            res = res.get(k)
+        return res
+    
+    def _get_plot_data(self, orbitals=['s', 'p', 'd']):
+        'arranges data'
+        # TODO: use a better data transfer
+        plot_data = self.eV
+        for orb in orbitals:
+            keys = [orb]
+            if orb != 'sum': keys.append('sum')
+            if self.s:
+                for s in self.s:
+                    y = self.get_data_val(keys + [s])
+                    plot_data = np.column_stack((plot_data, y))
+            else:
+                y = self.get_data_val(keys)
+                plot_data = np.column_stack((plot_data, y))
+        self.plot_orbitals = orbitals
+        self.plot_data = plot_data
+        
+    def get_plot_data(self, orbitals=None):
+        if orbitals or not self.plot_data:
+            self._get_plot_data(orbitals)
+        
+        # TODO: add headers?
+        def format_value(iv):
+            return '{:>18.11E}'.format(iv[1]) if iv[0] > 0 else str(iv[1])
+        return '\n'.join([' '.join(map(format_value, enumerate(lin)))
+                          for lin in plot_data])
+    
+    def plot(self, orbitals=None):
+        if orbitals or not self.plot_data:
+            self._get_plot_data(orbitals)
 
-    def plot(self, orbitals):
         color = {'s': 'blue',
                  'p': 'green',
                  'd': 'red',
                  'sum': 'black'}
-        if self.s:
-            for orb in orbitals:
-                for s in self.s:
-                    x = self.eV
-                    if orb != 'sum':
-                        y = self.data[orb]['sum'][s]
-                    else:
-                        y = self.data[orb][s]
-                    kw = {'color': color[orb]}
-                    if s == 1:
-                        kw['label'] = orb
-                    plt.plot(x, y, **kw)
+        x = self.eV
+        i = iter(range(1, len(self.plot_data[0])))
+        for orb in self.plot_orbitals:
+            y = self.plot_data[:, next(i)]
+            plt.plot(x, y, color=color[orb], label=orb)
+            if self.s:
+                y = self.plot_data[:, next(i)]
+                plt.plot(x, y, color=color[orb])
         plt.xlabel('E - Ef (eV)')
         plt.ylabel('DOS')
         plt.legend()
