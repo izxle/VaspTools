@@ -125,4 +125,4 @@ def main(argv=None):
     # TODO: comparisson
     
 if __name__ == '__main__':
-    main('testDOS --name Pd60Bi41000.DOSCAR -g d sum')
+    main()
