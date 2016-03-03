@@ -33,7 +33,7 @@ def parse_int_set(inp):
 
 def correct_z(atoms):
     '''
-    Useful when bottom atoms go below 0 and are written on the top.
+    Useful when bottom atoms that go below 0 are written on the top.
     '''
     min_z = ''
     c = atoms.get_cell()[2][2]
@@ -48,7 +48,7 @@ def correct_z(atoms):
 def tag_layers(atoms, n_layers):
     max_val = max([a.z for a in atoms])
     th = max_val / n_layers
-    struct.set_tags([min(int(a.z / th) + 1, n_layers) for a in struct])
+    atoms.set_tags([min(int(a.z / th) + 1, n_layers) for a in atoms])
     return atoms
 
 def fix_layers(atoms, fix, n_layers):
