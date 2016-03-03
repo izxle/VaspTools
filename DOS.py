@@ -76,7 +76,7 @@ def get_args(args):
                 # get atoms in layers of interest
                 atoms_in_layer = {a.index + 1 for a in atoms if a.tag in res.l}
                 indexes.intersection_update(atoms_in_layer)
-        n[f] = indexes
+        n[f] = list(indexes)
     res.n = n
     
     if res.plot == []:
