@@ -211,7 +211,7 @@ class DOS(object):
         def format_value(iv):
             return '{:>18.11E}'.format(iv[1]) if iv[0] > 0 else str(iv[1])
         return '\n'.join([' '.join(map(format_value, enumerate(lin)))
-                          for lin in plot_data])
+                          for lin in self.plot_data])
     
     def plot(self, orbitals=None):
         if orbitals or not self.plot_data:
