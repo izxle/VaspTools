@@ -30,6 +30,9 @@ def get_args(args):
                         help='Read info of atoms of selected elements')
     parser.add_argument('-l', nargs='+', default=[], type=int,
                         help='Read info of atoms in selected layers')
+    parser.add_argument('--e-range', nargs=2, default=[None, ''],
+                        type=float, dest='e_range',
+                        help='Range of energies for DOS calculations')
     parser.add_argument('--layers', type=int, default=4,
                         help='Number of layers in structure')
     parser.add_argument('--dbc', '--d-band-center', action='store_true',
@@ -48,6 +51,8 @@ def get_args(args):
     
     if res.n:
         res.n = set(parse_int_set(res.n))
+    
+    if res.e_range[0]: res.e_range = [-1 * res.e_range[0], res.e_range[1]]
     
     n = {}
     for f in res.directories:
@@ -89,7 +94,7 @@ def main(argv=None):
     container = []
     for f in args.directories:
         dos_file = path.join(f, args.name)
-        dos = DOS(atoms=args.n[f], dos_file_name=dos_file)
+        dos = DOS(atoms=args.n[f], dos_file_name=dos_file, e_range=args.e_range)
         if args.dbc:
             dbc = dos.get_band_center('d')
             res = '\n'.join(['{:>3}: {:9.5f}'.format(k, v)
@@ -122,6 +127,7 @@ def main(argv=None):
             elif len(args.directories) == 1:
                 dos.plot(args.plot)
         container.append(dos)
+    return container[0]
     # TODO: comparisson
     
 if __name__ == '__main__':
