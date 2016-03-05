@@ -2,8 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class DOS(object):
-    def __init__(self, atoms, dos_file_name):
+    def __init__(self, atoms, dos_file_name, e_range=[None, '']):
         self.plot_data = None
+        self.e_min = e_range[0]
+        self.e_max = e_range[1]
+        self.e_range = e_range
         self._import_DOS_data(dos_file_name, atoms)
         self._parse_DOS_data()
         
@@ -22,7 +25,8 @@ class DOS(object):
         del lines[:6]
         #  split data
         self.raw_data = {i: np.array(dtype=float, object=[line.split()
-                            for line in lines[i * (nedos + 1): i * nedos + i + nedos]])
+                            for line in lines[i * (nedos + 1):
+                                              i * nedos + i + nedos]])
                          for i in [0] + self.atoms}
     
     def _set_quantic_numbers(self, columns):
@@ -48,12 +52,14 @@ class DOS(object):
     def _parse_DOS_data(self):
         self.data = {}
         # store energy
-        self.eV = self.raw_data[0][:, 0] - self.efermi
+        eV = self.raw_data[0][:, 0] - self.efermi
+        range_e = (eV > self.e_min) & (eV < self.e_max)
+        self.eV = eV[range_e]
         # separate orbitals of each atom
         # TODO: reduce/simplify
         for i in self.atoms:
             ix = iter(xrange(1, self.columns))
-            raw_data = self.raw_data[i]
+            raw_data = self.raw_data[i][range_e]
             data = {}
             for l in self.l:
                 data[l] = {}
@@ -90,7 +96,7 @@ class DOS(object):
         # store sums
         # init
         res = {}
-        ne = self.nedos
+        ne = len(self.eV)
         for l, o in zip(self.l, self.orbitals):
             res[o] = {}
             if self.m:
@@ -148,11 +154,11 @@ class DOS(object):
         if self.s:
             ix = iter(xrange(1, 5))
             for key in ('sum', 'cumsum'):
-                res[key] = {s: s * self.raw_data[0][:, next(ix)]
+                res[key] = {s: s * self.raw_data[0][range_e, next(ix)]
                             for s in self.s}
         else:
-            res['sum'] = self.raw_data[0][:, 1]
-            res['cumsum'] = self.raw_data[0][:, 2]
+            res['sum'] = self.raw_data[0][range_e, 1]
+            res['cumsum'] = self.raw_data[0][range_e, 2]
         self.data.update(res)
             
     def calc_band_center(self, l):
