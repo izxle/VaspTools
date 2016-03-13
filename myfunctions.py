@@ -40,7 +40,7 @@ def correct_z(atoms):
     for a in atoms:
         z = a.z
         if z / c > 0.85:
-            a.z = z - 1
+            a.z = z - c
         min_z = min(a.z, min_z)
     atoms.translate((0, 0, -1 * min_z))
     return atoms
