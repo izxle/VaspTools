@@ -10,7 +10,7 @@ def getArgs(argv=[]):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('file', nargs='?', default='POSCAR', help='filename')
-    parser.add_argument('--fix', nargs='?', type=int, default=2,
+    parser.add_argument('--fix', type=int, default=2,
                         help='Number of layer to be fixed')
     parser.add_argument('-l', '--layers', type=int, default=4, dest='n_layers',
                         help='Number of layer in slab')
