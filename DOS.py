@@ -26,7 +26,7 @@ def get_args(args):
                         dest='orbital', default=['s', 'p', 'd', 'sum'])
     parser.add_argument('-n', nargs='+', default=[],
                         help='The index number of the atoms to be read')
-    parser.add_argument('-e', nargs='+', default=[], type=int,
+    parser.add_argument('-e', nargs='+', default=[],
                         help='Read info of atoms of selected elements')
     parser.add_argument('-l', nargs='+', default=[], type=int,
                         help='Read info of atoms in selected layers')
@@ -81,6 +81,18 @@ def get_args(args):
                 # get atoms in layers of interest
                 atoms_in_layer = {a.index + 1 for a in atoms if a.tag in res.l}
                 indexes.intersection_update(atoms_in_layer)
+            if not indexes:
+                contraints = []
+                if res.n: contraints.append("n={}".format(res.n))
+                if res.l: contraints.append("l={}".format(res.l))
+                if res.e: contraints.append("e={}".format(res.e))
+                msg = "{}\n".format(f) 
+                msg += "    No atoms found within given constraints ("
+                msg += ', '.join(contraints)
+                msg += "), using all atoms."
+        if res.v:
+            print "{} atoms found with given constraints".format(len(indexes))
+            print indexes if indexes else "  using all atoms"
         n[f] = list(indexes)
     res.n = n
     
@@ -90,7 +102,7 @@ def get_args(args):
     
 def main(argv=None):
     args = get_args(argv)
-    if args.v: print args
+    if args.v > 1: print args
     container = []
     for f in args.directories:
         dos_file = path.join(f, args.name)
@@ -100,12 +112,12 @@ def main(argv=None):
             res = '\n'.join(['{:>3}: {:9.5f}'.format(k, v)
                              for k, v in dbc.iteritems()])
             if args.write:
-                name = 'bdc'
+                name = 'dbc'
                 if args.l:
                     name += '_l_' + '_'.join(map(str, args.l))
                 name = path.join(f, name + '.txt')
                 with open(name, 'w') as f:
-                    f.write(res)
+                    f.write(res + '\n')
             else:
                 if len(args.directories) > 1:
                     print '\n' + f
