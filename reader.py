@@ -16,6 +16,7 @@ class Check(object):
         self.subdir = subdir
         self.v = v
         self.reps = reps
+        self.to_float = ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
 
         if self.v>1: print '{0}in calc'.format(pad)
         self.pad = pad + "  "
@@ -107,15 +108,18 @@ class Check(object):
                 for k, v in m.iteritems():
                     print '{0}{k}: {v}'.format(pad, k=k, v=v)
                 print "-----"
-        last_match = dict([(k, float(val))
-                           for k, val in  matches[-1].iteritems()])
+        last_match = {k: float(val) if k in self.to_float else int(val)
+                      for k, val in  matches[-1].iteritems()}
         if v>3: print "last_match:", last_match
         # store last match
         self.update(**last_match)
         # store more matches
         if nam == 'OSZICAR':
-            self.matches = matches
             self.F_n = self.F / self.n_atoms
+            for i, m in enumerate(matches):
+                matches[i]['F_n'] = '{:.6f}'.format(float(m['F']) /
+                                                    self.n_atoms)
+            self.matches = matches
 
     def getPath(self, nam):
         return path.join(self.f_path, nam)
@@ -132,7 +136,7 @@ class Check(object):
 
     def _set_blank(self):
         self.F = 0
-        self.n_iter = 0
+        self.io_step = 0
         self.dE = 0
         self.E0 = 0
         self.m = 0
@@ -142,26 +146,28 @@ class Check(object):
         if self.get('raw'): return str(self.vars())
         res = ''
         if self.reps:
-            min_lenght = 6
+            min_lenght = 8
             for r in self.reps:
                 lenght = max(min_lenght, len(str(self.matches[0][r])))
                 res += ('{:>'+str(lenght)+'}').format(r) + " "
-            res += "\n"
+            res = res[:-1] + "\n"
             for m in self.matches:
                 for r in self.reps:
                     lenght = max(min_lenght, len(m[r]))
                     res += ('{:>'+str(lenght)+'}').format(m[r]) + " "
-                res += "\n"
+                res = res[:-1] + "\n"
         else:
-            not_float = ['io_step', 'nam', 'n_atoms', 'subdir', 'e_step', 't']
-            to_float = ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE']
+            not_float = ['io_step', 'nam', 'n_atoms', 'e_step']
+            # to_float ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
             for k, v in self.vars().iteritems():
+                if k == 't':
+                    time = "{:.3f} h".format(v/3600) if v else "hasn't finished"
+                    res += "{:>7}: {}\n".format(k, time)
                 if k in not_float:
-                    res += "{0:>7}: {1}\n".format(k, v)
-                elif k in 'F_ndE0tmareaTemp':
-                    res += "{0:>7}: {1:.3f}\n".format(k, float(v))
-            res = res[:-1]
-        return res
+                    res += "{:>7}: {}\n".format(k, v)
+                elif k in self.to_float:
+                    res += "{:>7}: {:.3f}\n".format(k, float(v))
+        return res[:-1]
 #..
 
 class Folder(object):
