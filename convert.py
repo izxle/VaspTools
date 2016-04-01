@@ -2,6 +2,7 @@
 
 from ase.io import write, read
 from os import listdir, getcwd
+from myfunctions import correct_z
 import argparse
 
 def getArgs(args=None):
@@ -15,10 +16,8 @@ def getArgs(args=None):
     parser.add_argument('-f', help='old format')
     parser.add_argument('-n', '--name', default=None, dest='name',
                         help='overwrite new name')
-    if args:
-        res = parser.parse_args(args.split())
-    else:
-        res = parser.parse_args()
+    
+    res = parser.parse_args(args.split()) if args else parser.parse_args()
     if res.name:
         res.nam = res.name
     else:
@@ -29,16 +28,14 @@ def getArgs(args=None):
 
 def main(argv=None):
     args = getArgs(argv)
-    if args.f:
-        struct = read(args.file, format=args.f)
-    else:
-        struct = read(args.file)
+    atoms = read(args.file, format=args.f) if args.f else struct = read(args.file)
+    atoms = correct_z(atoms)
     kw = {"format": args.format}
     if args.format == 'vasp':
         kw['sort'] = True
         kw['vasp5'] = True
         kw['direct'] = True
-    write(args.nam, struct, **kw)
+    write(args.nam, atoms, **kw)
 
 if __name__ == '__main__':
     main()
