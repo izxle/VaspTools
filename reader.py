@@ -163,10 +163,11 @@ class Check(object):
                 if k == 't':
                     time = "{:.3f} h".format(v/3600) if v else "hasn't finished"
                     res += "{:>7}: {}\n".format(k, time)
-                if k in not_float:
-                    res += "{:>7}: {}\n".format(k, v)
                 elif k in self.to_float:
-                    res += "{:>7}: {:.3f}\n".format(k, float(v))
+                    res += "{:>7}: {:.3f}\n".format(k, v)
+                else:
+                    res += "{:>7}: {}\n".format(k, v)
+                
         return res[:-1]
 #..
 
