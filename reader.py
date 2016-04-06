@@ -157,7 +157,7 @@ class Check(object):
                     res += ('{:>'+str(lenght)+'}').format(m[r]) + " "
                 res = res[:-1] + "\n"
         else:
-            not_float = ['io_step', 'nam', 'n_atoms', 'e_step']
+            not_float = ['io_step', 'nam', 'n_atoms']
             # to_float ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
             for k, v in self.vars().iteritems():
                 if k == 't':
@@ -165,7 +165,7 @@ class Check(object):
                     res += "{:>7}: {}\n".format(k, time)
                 elif k in self.to_float:
                     res += "{:>7}: {:.3f}\n".format(k, v)
-                else:
+                elif k in not_float:
                     res += "{:>7}: {}\n".format(k, v)
                 
         return res[:-1]
