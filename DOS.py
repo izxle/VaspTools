@@ -39,11 +39,12 @@ def get_args(args):
     parser.add_argument('-w', '--write', action='store_true', default=False,
                         help='write requested DOS data')
     parser.add_argument('-p', '-g', '--graph', '--plot', nargs='*',
-                        default=[], dest='plot',
+                        choices=['s', 'p', 'd', 'f', 'sum'], dest='plot',
                         help='plot DOS for the specified orbitals')
     parser.add_argument('--name', default='DOSCAR',
                         help='name of DOSCAR file to read')
     parser.add_argument('-v', action='count', default=0)
+    parser.add_argument('--test', action='store_true')
 
     res = parser.parse_args(args.split()) if args else parser.parse_args()
     
@@ -101,6 +102,7 @@ def get_args(args):
 def main(argv=None):
     args = get_args(argv)
     if args.v > 1: print args
+    if args.test: return
     container = []
     for f in args.directories:
         dos_file = path.join(f, args.name)
