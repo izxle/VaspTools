@@ -22,8 +22,6 @@ def get_args(args):
     
     parser.add_argument('directories', nargs='*', default=[getcwd()],
                         help='path to directories with DOS files to read')
-    parser.add_argument('-o', '--orbital', '--orbitals', nargs='+',
-                        dest='orbital', default=['s', 'p', 'd', 'sum'])
     parser.add_argument('-n', nargs='+', default=[],
                         help='The index number of the atoms to be read')
     parser.add_argument('-e', nargs='+', default=[],
@@ -41,7 +39,7 @@ def get_args(args):
     parser.add_argument('-w', '--write', action='store_true', default=False,
                         help='write requested DOS data')
     parser.add_argument('-p', '-g', '--graph', '--plot', nargs='*',
-                        default=None, dest='plot',
+                        default=[], dest='plot',
                         help='plot DOS for the specified orbitals')
     parser.add_argument('--name', default='DOSCAR',
                         help='name of DOSCAR file to read')
@@ -97,7 +95,7 @@ def get_args(args):
     res.n = n
     
     if res.plot == []:
-        res.plot = ['s', 'p', 'd', 'f', 'sum']
+        res.plot = ['s', 'p', 'd', 'sum']
     return res
     
 def main(argv=None):
