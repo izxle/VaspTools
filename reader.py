@@ -1,5 +1,5 @@
 from re import compile
-from os import path, walk
+from os import path, walk, listdir
 from numpy import array, cross
 
 class Check(object):
@@ -12,7 +12,7 @@ class Check(object):
         v: verbosity
         """
         self.f_path = f_path
-        self.nam = path.basename(f_path.rstrip('/\\'+subdir))
+        self.nam = path.basename(f_path.rstrip(subdir).rstrip('/\\'))
         self.subdir = subdir
         self.v = v
         self.reps = reps
@@ -32,13 +32,20 @@ class Check(object):
 
     def _readPOSCAR(self):
         # TODO: ignore comments
-        # TODO: read CONTCAR when available
-        path = self.getPath('POSCAR')
-        if self.v: print '{0}reading POSCAR'.format(self.pad)
+        try:
+            nams = listdir(self.f_path)
+        except OSError, e:
+            raise IOError(e if self.v else '{} does not exist'.format(self.subdir))
+        for nam in ['POSCAR', 'CONTCAR']:
+            if nam in nams: break
+            raise IOError('No structure files detected')
+        path = self.getPath(nam)
+        if self.v: print '{0}reading structure'.format(self.pad)
         with open(path, 'r') as f:
             # TODO: read more data
             # with ASE
             lines =  f.readlines()
+            if not lines: raise IOError('No POSCAR found')
             a = array(map(float, lines[2].split()))
             b = array(map(float, lines[3].split()))
             elms = lines[5].split()
@@ -211,9 +218,12 @@ class Folder(object):
         for subdir in dirs:
             if self.v: print "{0}in {1}".format(self.pad, subdir)
             f_path = self.getPath(subdir, self.subdir)
-            calc = Check(f_path=f_path, pad=self.pad+'  ',
-                         v=self.v, subdir=self.subdir)
-            self.calcs.append(calc)
+            try:
+                calc = Check(f_path=f_path, pad=self.pad+'  ',
+                             v=self.v, subdir=self.subdir)
+                self.calcs.append(calc)
+            except IOError, e:
+                print "{}: {}".format(subdir, e)
         self._formatData()
 
     def getPath(self, nam, subdir=''):
