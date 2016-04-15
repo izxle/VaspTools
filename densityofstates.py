@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# TODO: add meta data?
+
 class DOS(object):
     def __init__(self, atoms, dos_file_name, e_range=[None, '']):
         self.plot_data = None
