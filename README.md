@@ -82,6 +82,30 @@ optional arguments:
 
 *slab.py* - Creates an fcc (111) structure with desired amount of vacuum and fixed layers.
 
+```
+usage: slab.py [-h] [-s SIZE SIZE SIZE] [-a A] [-c C] [-f FIX] [--layers N_LAYERS] [--vac VACUUM] [-o]
+               [--struct STRUCT] [--face FACE] [-p PAD] element
+
+positional arguments:
+  element               Symbol of element
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SIZE SIZE SIZE, --size SIZE SIZE SIZE
+                        times unit cell is repeated in each direction
+                        (default: [4, 4, 4])
+  -a A                  lattice constant a in Angstroms (default: 1.0)
+  -c C                  lattice constant c in Angstroms (default: 1.0)
+  -f, --fix FIX         number of layers to be fixed (default: 0)
+  --layers N_LAYERS     number of layers in slab (default: 4)
+  --vac, --vacuum       separation between slabs in Angstroms (default: 13.0)
+  -o, --orthogonal      build orthogonal cell (default: False)
+  --struct, --structure Face Centered Cubic (default: fcc)
+  --face FACE           build orthogonal cell (default: 111)
+  -p PAD, --pad PAD     extra text for output filename (default: .draft)
+
+```
+
 ###### Other
 
 *convert.py* - Convert between multiple file types (supported by ASE).
