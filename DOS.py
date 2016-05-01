@@ -116,13 +116,13 @@ def main(argv=None):
                 if args.l:
                     name += '_l_' + '_'.join(map(str, args.l))
                 name = path.join(f, name + '.txt')
-                with open(name, 'w') as f:
-                    f.write(res + '\n')
+                with open(name, 'w') as tmp:
+                    tmp.write(res + '\n')
             else:
                 if len(args.directories) > 1:
                     print '\n' + f
                 print res
-        elif args.plot:
+        if args.plot:
             if args.write:
                 data = dos.get_plot_data(args.plot)
                 nam = path.basename(path.dirname(path.abspath(f)))
