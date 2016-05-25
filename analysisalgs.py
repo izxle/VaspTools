@@ -9,7 +9,7 @@ class Ediff(object):
         self.area = parts.pop('area', False)
         # calc
         self._get_data_from_parts(parts)
-        self.ads = 'ads' in parts
+        self.ads = parts['ads']
         # run
         if isinstance(self.complet, Check):
             res = {self.complet.nam: {'Ediff': self._get_energy_diff(self.complet),
@@ -73,7 +73,7 @@ class Ediff(object):
             elif cat == 'bulk' or cat == 'ads':
                 if v: print "init read part", path
                 tmp = Check(path, v=v)
-                nam = '{}-{}'.format(p, tmp.nam)
+                nam = '{}-{}'.format(p, cat)
                 res[nam] = {'energy': tmp.F,
                             'ratio': next(tmp.elements.iteritems()),
                             'relE': {}}
@@ -118,4 +118,3 @@ def MDynn(folder):
         res += "\n" + "\n".join(lines)    
         
     return res
-    
