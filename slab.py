@@ -4,10 +4,10 @@ import argparse
 from ase import Atoms
 from ase.constraints import FixAtoms
 from ase.lattice.surface import *
-from ase.io import write
+from ase.io import read, write
 from myfunctions import fix_layers, correct_z
 
-#TODO: add vacuum by number of layers option
+#TODO: add a vacuum by layer option
 
 def getArgs(argv=[]):
     kw = {'description': '',
@@ -21,13 +21,14 @@ def getArgs(argv=[]):
                         help='lattice constant a in Angstroms')
     parser.add_argument('-c', type=float, default=1.0,
                         help='lattice constant c in Angstroms')
-    parser.add_argument('-f', '--fix', type=int, default=2,
+    parser.add_argument('-f', '--fix', type=int, default=0,
                         help='number of layers to be fixed')
     parser.add_argument('--layers', dest='n_layers', type=int, default=4,
                         help='number of layers in slab')
     parser.add_argument('--vac', '--vacuum', type=float, default=13.0,
                         dest='vacuum',
                         help='separation between slabs in Angstroms')
+    parser.add_argument('--slab')
     parser.add_argument('-o', '--orthogonal', action='store_true',
                         default=False, help='build orthogonal cell')
     parser.add_argument('--struct', '--structure', default='fcc',
@@ -36,7 +37,7 @@ def getArgs(argv=[]):
                         help='build orthogonal cell')
     parser.add_argument('-p', '--pad', default='.draft',
                         help='extra text for output filename')
-    
+
     args = parser.parse_args(argv.split()) if argv else parser.parse_args()
 
     return args
@@ -57,6 +58,9 @@ def slab(args):
             atoms = fcc100(**kw)
         elif face == '110':
             atoms = fcc110(**kw)
+        else:
+            raise SyntaxError('Unsupported structure '
+                              '{}{}'.format(structure, face))
     elif structure == 'bcc':
         if face == '111':
             atoms = bcc111(**kw)
@@ -64,23 +68,33 @@ def slab(args):
             atoms = bcc100(**kw)
         elif face == '110':
             atoms = bcc110(**kw)
+        else:
+            raise SyntaxError('Unsupported structure '
+                              '{}{}'.format(structure, face))
     elif args.struct == 'hcp':
         kw['c'] = args.c
         if args.face == '0001':
             atoms = hcp0001(**kw)
         elif args.face == '10m10':
+            del kw['orthogonal']
             atoms = hcp10m10(**kw)
-            
+        else:
+            raise SyntaxError('Unsupported structure '
+                              '{}{}'.format(structure, face))
+    else:
+        raise SyntaxError('Unsupported structure '
+                          '{}{}'.format(structure, face))
     return atoms
     
 def main(argv=[]):
     args = getArgs(argv)
-    # create slab
-    atoms = slab(args)
+    # get slab
+    atoms = read(args.slab) if args.slab else slab(args)
     # adjust cell
     atoms = correct_z(atoms)
     # set contraints
-    atoms = fix_layers(atoms, args.fix, args.n_layers)
+    if args.fix:
+        atoms = fix_layers(atoms, args.fix, args.n_layers)
     # write POSCAR
     kw = {'format': 'vasp',
           'sort': True,
