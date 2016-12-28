@@ -35,7 +35,7 @@ def correct_z(atoms):
     '''
     Useful when bottom atoms that go below 0 are written on the top.
     '''
-    min_z = ''
+    min_z = float('inf')
     c = atoms.get_cell()[2][2]
     for a in atoms:
         z = a.z
@@ -61,3 +61,15 @@ def fix_layers(atoms, fix, n_layers):
     constraint = FixAtoms(mask=[a.z <= th for a in atoms])
     atoms.set_constraint(constraint)
     return atoms
+    
+def printv(*args):
+    res = ''
+    pad = 0
+    for arg in args:
+        if str(arg)[:2] == '  ': pad = arg.count(' ')
+        if pad: res += ' ' * pad
+        if isinstance(arg, dict):
+            res += '\n'.join('  {}: {}'.format(k, v) for k, v in arg.iteritems())
+        else:
+            res += str(arg)
+    print(res)
