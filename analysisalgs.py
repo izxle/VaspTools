@@ -1,4 +1,5 @@
 from reader import *
+from myfunctions import printv
 
 class Ediff(object):
     def __init__(self, complet, parts, v=False):
@@ -11,27 +12,27 @@ class Ediff(object):
         self._get_data_from_parts(parts)
         self.ads = parts['ads']
         # run
+        self._process_data()
+        
+        
+    def _process_data(self):
         if isinstance(self.complet, Check):
             res = {self.complet.nam: {'Ediff': self._get_energy_diff(self.complet),
-                                      'complet': complet.F,
-                                      'area': self.area if type(self.area)==float else complet.area
+                                      'complet': self.complet.F,
+                                      'area': self.area if type(self.area)==float 
+                                              else self.complet.area
                                      }
                   }
         elif isinstance(self.complet, Folder):
             res = {calc.nam: {'Ediff': self._get_energy_diff(calc),
                               'complet': calc.F,
-                              'area': self.area if type(self.area)==float else calc.area
+                              'area': self.area if type(self.area)==float
+                                      else calc.area
                              }
                    for calc in self.complet.calcs}
         self.res = res
 
     def _get_energy_diff(self, complet):
-        # modifyers
-        area = self.area
-        if not area:
-            area = 1
-        elif area == True:
-            area = complet.get('area')
         # sum relative energy of parts
         parts_energy = 0
         for nam, part in self.parts.iteritems():
@@ -47,9 +48,15 @@ class Ediff(object):
         res = complet.F - parts_energy
         if self.ads:
             ads_ratio = complet.elements.get(self.ads_elm) / self.ads_num
-            if self.v: print 'ads_ratio:', ads_ratio
+            if self.v: printv('ads_ratio: ', ads_ratio)
             res /= ads_ratio
-        return res / area
+            
+        if self.area:
+            if isinstance(self.area, bool):
+                area = complet.get('area') * 2
+            res /= area
+            
+        return res
 
     def _get_data_from_parts(self, parts):
         v = self.v
@@ -57,21 +64,20 @@ class Ediff(object):
         p = 0 # pad counter to avoid collision
         for cat, path in parts.iteritems():
             if not path: continue
-            if v: print "  cat: {} path: {}".format(cat, path)
+            if v: printv("  cat: {} path: {}".format(cat, path))
             if cat == 'part':
                 for part in path:
-                    if v: print "init read part", part
+                    if v: printv("init read part ", part)
                     tmp = Check(part, v=v)
                     nam = '{}-{}'.format(p, tmp.nam)
                     res[nam] = {'energy': tmp.F,
                                 'ratio': {},
                                 'relE': {}}
                     if v: 
-                        print "\n".join(["  {}: {}".format(k, v)
-                                         for k,v in res.iteritems()])
-                        print "fin read part"
+                        printv(res)
+                        printv("fin read part")
             elif cat == 'bulk' or cat == 'ads':
-                if v: print "init read part", path
+                if v: printv("init read part", path)
                 tmp = Check(path, v=v)
                 nam = '{}-{}'.format(p, cat)
                 res[nam] = {'energy': tmp.F,
@@ -80,9 +86,8 @@ class Ediff(object):
                 if cat == 'ads':
                     self.ads_elm, self.ads_num = res[nam]['ratio']
                 if v: 
-                    print "\n".join(["  {}: {}".format(k, v)
-                                     for k,v in res.iteritems()])
-                    print "fin read part"
+                    printv(res)
+                    printv("fin read part")
         self.parts = res
 
     def __str__(self):
