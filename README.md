@@ -66,6 +66,8 @@ optional arguments:
 
 ###### Input files
 
+These scripts work with the [`ASE`](https://wiki.fysik.dtu.dk/ase/) and [`pymatgen`](http://pymatgen.org/) modules.
+
 *fix_layers.py* - Takes an atom-like file (readable with ASE) and fixes a number of desired layers for selective dynamics
 
     usage: fix_layers.py [-h] [--fix FIX] [-l N_LAYERS] [-p PAD] [-f FORMAT] [file]
@@ -80,10 +82,39 @@ optional arguments:
       -p, --pad             extra text for output filename (default: .draft)
       -f, --format          format of file to read (default: None)
 
-*slab.py* - Creates an fcc (111) structure with desired amount of vacuum and fixed layers.
+
+*slab.py* - generates a slab structure from a bulk structure. Needs `myfunctions.py`, `fix_layers.py` and `createSlab.py`.
 
 ```
-usage: slab.py [-h] [-s SIZE SIZE SIZE] [-a A] [-c C] [-f FIX] [--layers N_LAYERS] [--vac VACUUM] [-o]
+usage: slab.py [-h] [-s SIZE [SIZE ...]] [--ss SLAB_SIZE] [-f FIX]
+               [-l N_LAYERS] [--vac VACUUM] [--slab SLAB] [--format FORMAT]
+               [-p PAD]
+               bulk face [face ...]
+
+positional arguments:
+  bulk                  bulk as reference for data
+  face                  build orthogonal cell
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SIZE [SIZE ...], --size SIZE [SIZE ...]
+                        repetitions of unit cell (default: (1, 1, 1))
+  --ss SLAB_SIZE, --slab_size SLAB_SIZE
+                        height of the slab (default: 10.0)
+  -f FIX, --fix FIX     number of layers to be fixed (default: 0)
+  -l N_LAYERS, --layers N_LAYERS
+                        number of layers in slab for fixing atoms (default: 0)
+  --vac VACUUM, --vacuum VACUUM
+                        separation between slabs in Angstroms (default: 13.0)
+  --slab SLAB           existing slab to modify (default: None)
+  --format FORMAT       fromat of input file (default: None)
+  -p PAD, --pad PAD     extra text for output filename (default: .draft)
+```
+
+*genSlab.py* - Creates a monometallic fcc (111) structure with desired amount of vacuum and fixed layers.
+
+```
+usage: genSlab.py [-h] [-s SIZE SIZE SIZE] [-a A] [-c C] [-f FIX] [--layers N_LAYERS] [--vac VACUUM] [-o]
                [--struct STRUCT] [--face FACE] [-p PAD] element
 
 positional arguments:
