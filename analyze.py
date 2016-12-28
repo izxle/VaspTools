@@ -31,50 +31,51 @@ def getArgs(argv=[]):
     parser.add_argument('--rep', '--reps', '--report', nargs='+', dest='reps',
                         default=[], choices=choices)
     
-    args = vars(parser.parse_args(argv.split()) if argv else parser.parse_args())
+    args = parser.parse_args(argv.split()) if argv else parser.parse_args()
     
     parsadd = argparse.ArgumentParser(prefix_chars='+', **kw)
     parsadd.add_argument('part', nargs='*', default=[])
     parsadd.add_argument('+b', '++bulk', default='')
     parsadd.add_argument('+a','++ads', default='')
-    parsadd.add_argument('++area', nargs='?', type=float, default=0, const=True)
+    parsadd.add_argument('++area', nargs='?', type=float, default=None, const=True)
     parsadd.add_argument('+v', action='count', default=0)
     
-    if args['MD']:
-        reps = args['reps']
+    if args.MD:
+        reps = args.reps
         for i, rep in enumerate(["io_step", "E", "Temp"]):
             if rep not in reps:
                 reps.insert(i, rep)
             elif reps.index(rep) != i:
                 reps.remove(rep)
                 reps.insert(i, rep)
-        args['reps'] = reps
+        args.reps = reps
 
-    if args['ads']: args['ads'] = vars(parsadd.parse_args(args['ads']))
+    if args.ads: args.ads = parsadd.parse_args(args.ads)
 
-    if args['v'] > 1: print 'args:', args
+    if args.v > 1: printv('args:\n', args)
     return args
 
 def main(argv=[]):
-    kwargs = getArgs(argv)
-    hasdirs = next(walk(kwargs['f_path']))[1]
+    args = getArgs(argv)
+    kw = vars(args)
+    hasdirs = next(walk(args.f_path))[1]
     # get output info
     if not hasdirs:
-        kwargs['pad'] = "  "
-        info = Check(**kwargs)
+        kw['pad'] = "  "
+        info = Check(**kw)
     else:
-        if not kwargs['reps']:
-            kwargs['reps'] = ['F', 't']
-        info = Folder(**kwargs)
+        if not args.reps:
+            args.reps = ['F', 't']
+        info = Folder(**kw)
     res = info
     # data analysis
-    if kwargs['ads']:
-        res = Ediff(info, parts=kwargs['ads'], v=kwargs['v'])
-    if kwargs['MD']:
+    if args.ads:
+        res = Ediff(info, parts=args.ads, v=args.v)
+    elif args.MD:
         assert isinstance(info, Folder), "Must be done on a directory"
         res = MDynn(info)
     # output
-    print res
+    printv(res)
 
 if __name__=='__main__':
     main()
