@@ -35,7 +35,7 @@ class Ediff(object):
     def _get_energy_diff(self, complet):
         # sum relative energy of parts
         parts_energy = 0
-        for nam, part in self.parts.iteritems():
+        for nam, part in self.parts.items():
             if part['ratio']:
                 elm, num = part['ratio']
                 ratio = complet.elements.get(elm) / float(num)
@@ -62,7 +62,7 @@ class Ediff(object):
         v = self.v
         res = {}
         p = 0 # pad counter to avoid collision
-        for cat, path in parts.iteritems():
+        for cat, path in parts.items():
             if not path: continue
             if v: printv("  cat: {} path: {}".format(cat, path))
             if cat == 'part':
@@ -81,7 +81,7 @@ class Ediff(object):
                 tmp = Check(path, v=v)
                 nam = '{}-{}'.format(p, cat)
                 res[nam] = {'energy': tmp.F,
-                            'ratio': next(tmp.elements.iteritems()),
+                            'ratio': tmp.elements.items()[0],
                             'relE': {}}
                 if cat == 'ads':
                     self.ads_elm, self.ads_num = res[nam]['ratio']
@@ -96,7 +96,7 @@ class Ediff(object):
             res += "{:12}: {:11.5f}\n".format(nam, val['Ediff'])
             if self.rep:
                 res += "  {:10}: {:11.5f}\n".format(nam, val['complet'])
-                for part_nam, part in self.parts.iteritems():
+                for part_nam, part in self.parts.items():
                     res += "  {:10}: {:11.5f}\n".format(part_nam,
                                                         part['relE'][nam])
                 if self.area:
