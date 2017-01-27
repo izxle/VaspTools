@@ -5,7 +5,7 @@ from myfunctions import printv
 
 class Check(object):
     def __init__(self, f_path, reps=[], subdir='',
-                 pad='', v=False, *args, **kw):
+                 pad='', nams=[], v=False, *args, **kw):
         """
         f_path: absolute path of directory to read
         reps: list of values to report [F, F_n, t, n_iter, ...]
@@ -15,6 +15,7 @@ class Check(object):
         self.f_path = f_path
         self.nam = path.basename(f_path.rstrip(subdir).rstrip('/\\'))
         self.subdir = subdir
+        self.dir_nams = nams
         self.v = v
         self.reps = reps
         self.to_float = ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
@@ -48,13 +49,13 @@ class Check(object):
             # TODO: do with ASE
             lines =  f.readlines()
             if not lines: raise IOError('Empty file')
-            a = array(map(float, lines[2].split()))
-            b = array(map(float, lines[3].split()))
+            a = array(list(map(float, lines[2].split())))
+            b = array(list(map(float, lines[3].split())))
             elms = lines[5].split()
-        nums = map(int, lines[6].split())
+        nums = list(map(int, lines[6].split()))
         n_atoms = sum(nums)
         if self.v: printv(self.pad, "n_atoms: ", n_atoms)
-
+        
         self.area = cross(a, b)[2]
         self.elements = {elm: nums[i] for i, elm in enumerate(elms)}
         self.n_atoms = n_atoms
@@ -103,7 +104,7 @@ class Check(object):
         with open(path, 'r') as f:
             txt = f.read()
             if v: printv(pad, ".. {1} loaded".format(nam))
-        matches = [{k: v for k, v in m.groupdict().iteritems() if v is not None}
+        matches = [{k: v for k, v in m.groupdict().items() if v is not None}
                    for m in regex.finditer(txt)]
         if not matches:
             # TODO: distinguish between no file and no match?
@@ -113,7 +114,7 @@ class Check(object):
         if v>2: printv(pad, 'matches:\n', matches, "\n-----")
         # TODO: handle possible non-numeric values
         last_match = {k: float(val) if k in self.to_float else int(val)
-                      for k, val in  matches[-1].iteritems()}
+                      for k, val in  matches[-1].items()}
         if v>3: printv("last_match:", last_match)
         # store last match
         self.update(**last_match)
@@ -163,7 +164,7 @@ class Check(object):
         else:
             not_float = ['io_step', 'nam', 'n_atoms']
             # to_float ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
-            for k, v in self.vars().iteritems():
+            for k, v in self.vars().items():
                 if k == 't':
                     time = "{:.3f} h".format(v/3600) if v else "hasn't finished"
                     res += "{:>7}: {}\n".format(k, time)
@@ -196,12 +197,15 @@ class Folder(object):
 
     def _run(self):
         self.calcs = []
-        # get dirs
+        # get all dirs if f_path
         dirs = next(walk(self.f_path))[1]
-        # ignore templates
+        # get only dirs in nams
+        # TODO: check with regex or with glob
+        if self.dir_nams: dirs = [d for d in dirs if d in self.dir_nams]
+        # ignore specified directories
         for d in self.ignore:
             if d in dirs:
-                d.remove(dir)
+                dirs.remove(d)
             else:
                 printv(d, " does not exist")
         # sort list
