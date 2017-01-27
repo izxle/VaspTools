@@ -102,7 +102,7 @@ class Check(object):
         path = self.getPath(nam)
         with open(path, 'r') as f:
             txt = f.read()
-            if v: printv(pad, ".. {1} loaded".format(nam))
+            if v: printv(pad, ".. {0} loaded".format(nam))
         matches = [{k: v for k, v in m.groupdict().items() if v is not None}
                    for m in regex.finditer(txt)]
         if not matches:
@@ -186,6 +186,7 @@ class Folder(object):
         self.v = v
         self.subdir = subdir
         self.dir_nams = nams
+        if v and nams: printv('reading only:', nams)
         self.reps = reps
         self.pad = pad
         self.ignore = i
