@@ -5,7 +5,7 @@ from myfunctions import printv
 
 class Check(object):
     def __init__(self, f_path, reps=[], subdir='',
-                 pad='', nams=[], v=False, *args, **kw):
+                 pad='', v=False, *args, **kw):
         """
         f_path: absolute path of directory to read
         reps: list of values to report [F, F_n, t, n_iter, ...]
@@ -15,7 +15,6 @@ class Check(object):
         self.f_path = f_path
         self.nam = path.basename(f_path.rstrip(subdir).rstrip('/\\'))
         self.subdir = subdir
-        self.dir_nams = nams
         self.v = v
         self.reps = reps
         self.to_float = ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
@@ -178,7 +177,7 @@ class Check(object):
 
 class Folder(object):
     def __init__(self, f_path, reps=[], subdir='',
-                 i=[], pad='', v=False, *args, **kw):
+                 i=[], pad='', nams=[], v=False, *args, **kw):
         """
         Compares data in calcs in one dictionary
         """
@@ -186,6 +185,7 @@ class Folder(object):
         self.nam = path.basename(f_path)
         self.v = v
         self.subdir = subdir
+        self.dir_nams = nams
         self.reps = reps
         self.pad = pad
         self.ignore = i
