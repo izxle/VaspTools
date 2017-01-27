@@ -23,16 +23,22 @@ def getArgs(argv=[]):
     parser.add_argument('--MD', action='store_true', default=False)
     parser.add_argument('-g', '--graph', '--plot', action='store_true',
                         default=False, dest='plot')
-    parser.add_argument('--ads', nargs='+', default=[])
+    parser.add_argument('--ads', nargs='+', default=[],
+                        help='starts the energy difference algorithm')
+    parser.add_argument('--nam', '--nams', nargs='*',
+                        help='name of exlusive directories to be read')
     parser.add_argument('-w', '--write', action='store_true', default=False)
     
     choices = ['io_step', 'F', 'F_n', 'e_step',
-               'E0', 'dE', 'Temp', 'E', 'm']
-    parser.add_argument('--rep', '--reps', '--report', nargs='+', dest='reps',
-                        default=[], choices=choices)
+               'E0', 'dE', 'Temp', 'E', 'm', 't']
+    parser.add_argument('--rep', '--reps', '--report', nargs='*', dest='reps',
+                        choices=choices)
     
     args = parser.parse_args(argv.split()) if argv else parser.parse_args()
     
+    if not args.reps:
+        args.reps = ['io_step', 'e_step', 'dE'] if args.reps == [] else []
+
     parsadd = argparse.ArgumentParser(prefix_chars='+', **kw)
     parsadd.add_argument('part', nargs='*', default=[])
     parsadd.add_argument('+b', '++bulk', default='')
@@ -41,7 +47,7 @@ def getArgs(argv=[]):
     parsadd.add_argument('+v', action='count', default=0)
     
     if args.MD:
-        reps = args.reps
+        reps = args.reps if args.reps is not None else []
         for i, rep in enumerate(["io_step", "E", "Temp"]):
             if rep not in reps:
                 reps.insert(i, rep)
@@ -70,7 +76,7 @@ def main(argv=[]):
     res = info
     # data analysis
     if args.ads:
-        res = Ediff(info, parts=args.ads, v=args.v)
+        res = Ediff(info, parts=vars(args.ads), v=args.v)
     elif args.MD:
         assert isinstance(info, Folder), "Must be done on a directory"
         res = MDynn(info)
