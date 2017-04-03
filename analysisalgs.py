@@ -2,12 +2,17 @@ from reader import *
 from myfunctions import printv
 
 class Ediff(object):
-    def __init__(self, complet, parts, v=False):
+    def __init__(self, complet, parts, nams=[], v=False, free_en=False):
         self.rep = parts.pop('v')
         self.complet = complet
+        self.nams = nams
+        self.free_en = free_en
         self.v = v
         # modifyers
         self.area = parts.pop('area', False)
+        # 
+        if nams:
+            assert len(nams) == len(parts), 'incorrect number of nams'
         # calc
         self._get_data_from_parts(parts)
         self.ads = parts['ads']
@@ -16,16 +21,17 @@ class Ediff(object):
         
         
     def _process_data(self):
+        nams = iter(self.nams)
         if isinstance(self.complet, Check):
             res = {self.complet.nam: {'Ediff': self._get_energy_diff(self.complet),
-                                      'complet': self.complet.F,
+                                      'complet': self.complet.F if self.free_en else self.complet.E0,
                                       'area': self.area if type(self.area)==float 
                                               else self.complet.area
                                      }
                   }
         elif isinstance(self.complet, Folder):
             res = {calc.nam: {'Ediff': self._get_energy_diff(calc),
-                              'complet': calc.F,
+                              'complet': calc.F if self.free_en else calc.E0,
                               'area': self.area if type(self.area)==float
                                       else calc.area
                              }
@@ -45,7 +51,7 @@ class Ediff(object):
             self.parts[nam]['relE'][complet.nam] = relE
             parts_energy += relE
         #
-        res = complet.F - parts_energy
+        res = -parts_energy + (complet.F if self.free_en else complet.E0)
         if self.ads:
             ads_ratio = complet.elements.get(self.ads_elm) / self.ads_num
             if self.v: printv('ads_ratio: ', ads_ratio)
@@ -62,6 +68,7 @@ class Ediff(object):
         v = self.v
         res = {}
         p = 0 # pad counter to avoid collision
+        nams = iter(self.nams)
         for cat, path in parts.items():
             if not path: continue
             if v: printv("  cat: {} path: {}".format(cat, path))
@@ -69,8 +76,8 @@ class Ediff(object):
                 for part in path:
                     if v: printv("init read part ", part)
                     tmp = Check(part, v=v)
-                    nam = '{}-{}'.format(p, tmp.nam)
-                    res[nam] = {'energy': tmp.F,
+                    nam = next(nams) if self.nams else '{}-{}'.format(p, tmp.nam)
+                    res[nam] = {'energy': tmp.F if self.free_en else tmp.E0,
                                 'ratio': {},
                                 'relE': {}}
                     if v: 
@@ -79,8 +86,8 @@ class Ediff(object):
             elif cat == 'bulk' or cat == 'ads':
                 if v: printv("init read part", path)
                 tmp = Check(path, v=v)
-                nam = '{}-{}'.format(p, cat)
-                res[nam] = {'energy': tmp.F,
+                nam = next(nams) if self.nams else '{}-{}'.format(p, cat)
+                res[nam] = {'energy': tmp.F if self.free_en else tmp.E0,
                             'ratio': tmp.elements.items()[0],
                             'relE': {}}
                 if cat == 'ads':
@@ -96,7 +103,10 @@ class Ediff(object):
             res += "{:12}: {:11.5f}\n".format(nam, val['Ediff'])
             if self.rep:
                 res += "  {:10}: {:11.5f}\n".format(nam, val['complet'])
+                if self.nams:
+                    nams = iter(self.nams)
                 for part_nam, part in self.parts.items():
+                    if self.nams: part_nam = next(nams)
                     res += "  {:10}: {:11.5f}\n".format(part_nam,
                                                         part['relE'][nam])
                 if self.area:
