@@ -25,15 +25,17 @@ def getArgs(argv=[]):
                         default=False, dest='plot')
     parser.add_argument('--ads', nargs='+', default=[],
                         help='starts the energy difference algorithm')
-    parser.add_argument('--nam', '--nams', nargs='*',
+    parser.add_argument('--nam', '--nams', nargs='*', dest='nams',
                         help='name of exlusive directories to be read')
     parser.add_argument('-w', '--write', action='store_true', default=False)
+    parser.add_argument('--free-en', action='store_true', default=False)
     
     choices = ['io_step', 'F', 'F_n', 'e_step',
                'E0', 'dE', 'Temp', 'E', 'm', 't']
     parser.add_argument('--rep', '--reps', '--report', nargs='*', dest='reps',
                         choices=choices)
-    
+    parser.add_argument('--test', action='store_true',
+                        help='kyeword for testing purposes.')
     args = parser.parse_args(argv.split()) if argv else parser.parse_args()
     
     if not args.reps:
@@ -43,6 +45,7 @@ def getArgs(argv=[]):
     parsadd.add_argument('part', nargs='*', default=[])
     parsadd.add_argument('+b', '++bulk', default='')
     parsadd.add_argument('+a','++ads', default='')
+    parsadd.add_argument('++nam', '++nams', dest='nams', nargs='*')
     parsadd.add_argument('++area', nargs='?', type=float, default=None, const=True)
     parsadd.add_argument('+v', action='count', default=0)
     
@@ -63,6 +66,7 @@ def getArgs(argv=[]):
 
 def main(argv=[]):
     args = getArgs(argv)
+    if args.test: return printv(args)
     kw = vars(args)
     hasdirs = next(walk(args.f_path))[1]
     # get output info
@@ -76,9 +80,9 @@ def main(argv=[]):
     res = info
     # data analysis
     if args.ads:
-        res = Ediff(info, parts=vars(args.ads), v=args.v)
+        res = Ediff(info, parts=vars(args.ads), v=args.v, freeEn=args.free_en)
     elif args.MD:
-        assert isinstance(info, Folder), "Must be done on a directory"
+        assert isinstance(info, Folder), "Target must contain directories"
         res = MDynn(info)
     # output
     printv(res)
