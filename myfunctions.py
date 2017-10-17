@@ -28,7 +28,7 @@ def parse_int_set(inp):
                                   "'{}'".format(num))
             assert init < fin, ("Initial value ({}) must be lower than "
                                 "end value ({}).".format(init, fin))
-            nums += range(init, fin + 1, step)
+            nums += list(range(init, fin + 1, step))
     return nums
 
 def correct_z(atoms):
