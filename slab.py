@@ -3,7 +3,13 @@ import argparse
 
 import createSlab 
 
-def getArgs(argv=[]):
+
+def get_args(argv: str=''):
+    """
+    argument parser for command line execution
+    :param argv: string emulating the command line arguments
+    :return: arguments Namespace
+    """
     kw = {'description': '',
           'formatter_class': argparse.ArgumentDefaultsHelpFormatter}
     parser = argparse.ArgumentParser(**kw)
@@ -30,7 +36,7 @@ def getArgs(argv=[]):
     args = parser.parse_args(argv.split()) if argv else parser.parse_args()
     return args
 
-if __name__ == '__main__':
-    args = getArgs()
-    createSlab.main(args)
 
+if __name__ == '__main__':
+    args = get_args()
+    createSlab.main(args)

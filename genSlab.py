@@ -1,15 +1,22 @@
 #!/bin/env python
 
 import argparse
-from ase import Atoms
-from ase.constraints import FixAtoms
-from ase.lattice.surface import *
+
+from ase.build.surface import *
 from ase.io import read, write
+
 from myfunctions import fix_layers, correct_z
+
 
 #TODO: add a vacuum by layer option
 
-def getArgs(argv=[]):
+
+def get_args(argv: str=''):
+    """
+    argument parser for command line execution
+    :param argv: string emulating the command line arguments
+    :return: arguments Namespace
+    """
     kw = {'description': '',
           'formatter_class': argparse.ArgumentDefaultsHelpFormatter}
     parser = argparse.ArgumentParser(**kw)
@@ -41,6 +48,7 @@ def getArgs(argv=[]):
     args = parser.parse_args(argv.split()) if argv else parser.parse_args()
 
     return args
+
 
 def slab(args):
     structure = args.struct
@@ -85,14 +93,15 @@ def slab(args):
         raise SyntaxError('Unsupported structure '
                           '{}{}'.format(structure, face))
     return atoms
-    
-def main(argv=[]):
-    args = getArgs(argv)
+
+
+def main(argv: str=''):
+    args = get_args(argv)
     # get slab
     atoms = read(args.slab) if args.slab else slab(args)
     # adjust cell
     atoms = correct_z(atoms)
-    # set contraints
+    # set constraints
     if args.fix:
         atoms = fix_layers(atoms, args.fix, args.n_layers)
     # write POSCAR
@@ -103,6 +112,7 @@ def main(argv=[]):
           
     nam = 'POSCAR' + args.pad
     write(nam, atoms, **kw)
+
 
 if __name__ == '__main__':
     main()
