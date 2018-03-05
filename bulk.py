@@ -1,17 +1,15 @@
 #!/bin/env python
 
 import argparse
-from ase.lattice.bulk import *
-from ase.io import write
+from ase.build import bulk
 
-#TODO: add a vacuum by layer option
 
-def getArgs(argv=[]):
+def get_args(argv=''):
     kw = {'description': '',
           'formatter_class': argparse.ArgumentDefaultsHelpFormatter}
     parser = argparse.ArgumentParser(**kw)
 
-    parser.add_argument('name', help='Chemical symbol of element')
+    parser.add_argument('name', help='Chemical symbol or symbols of element')
     parser.add_argument('-a', type=float, default=None,
                         help='lattice constant a in Angstroms')
     parser.add_argument('-c', type=float, default=None,
@@ -26,7 +24,12 @@ def getArgs(argv=[]):
     parser.add_argument('-p', '--pad', default='.draft',
                         help='extra text for output filename')
 
-    args = parser.parse_args(argv.split()) if argv else parser.parse_args()
+    if isinstance(argv, str):
+        argv = argv.split()
+    elif not hasattr(argv, '__iter__'):
+        raise TypeError(f'argv must be `str` or iterable, not {type(argv)}')
+
+    args = parser.parse_args(argv) if argv else parser.parse_args()
     
     args.crystalstructure = args.crystalstructure.lower()
     if args.crystalstructure in ['fcc', 'bcc']:
@@ -34,8 +37,9 @@ def getArgs(argv=[]):
     
     return args
 
-def main(argv=[]):
-    args = getArgs(argv)
+
+def main(argv=''):
+    args = get_args(argv)
     # create slab
     kw = dict(vars(args))
     del kw['pad']
@@ -46,8 +50,9 @@ def main(argv=[]):
           'vasp5': True,
           'direct': True}
           
-    nam = 'POSCAR' + args.pad
-    write(nam, atoms, **kw)
+    filename = 'POSCAR' + args.pad
+    atoms.write(filename, **kw)
+
 
 if __name__ == '__main__':
     main()
