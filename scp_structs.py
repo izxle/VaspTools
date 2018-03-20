@@ -38,7 +38,7 @@ def main(argv=''):
             name += '_' + sd.strip('/')
         dst_path = name + ext
         src_path = path.join(args.fpath, sd, ssd, src)
-        cmd_list = ['sshpass', '-p', '<yourpassword>', 'scp', f'ada:{src_path}', dst_path]
+        cmd_list = ['sshpass', '-p', '<your_password>', 'scp', f'<remote_host_address>:{src_path}', dst_path]
         run(cmd_list)
 
 
