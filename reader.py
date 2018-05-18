@@ -1,7 +1,16 @@
+from os import path, walk, listdir, getcwd
 from re import compile
-from os import path, walk, listdir
+
 from numpy import array, cross
+
 from myfunctions import printv
+from ase.io import read as read_xml
+
+
+def read(filename):
+    result = read_xml(filename)
+    return
+
 
 class Check(object):
     def __init__(self, f_path, reps=[], subdir='',
@@ -176,7 +185,7 @@ class Check(object):
 #..
 
 class Folder(object):
-    def __init__(self, f_path, reps=[], subdir='',
+    def   __init__(self, f_path, reps=[], subdir='',
                  i=[], pad='', nams=[], v=False, *args, **kw):
         """
         Compares data in calcs in one dictionary
