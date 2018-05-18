@@ -1,5 +1,5 @@
-from reader import *
-from myfunctions import printv
+from old_files.reader import *
+from old_files.myfunctions import printv
 
 class Ediff(object):
     def __init__(self, complet, parts, nams=[], v=False, free_en=False):

@@ -3,7 +3,7 @@
 import logging
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-from analysisalgs import *
+from old_files.analysisalgs import *
 
 logger = logging.getLogger('log')
 

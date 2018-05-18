@@ -1,9 +1,9 @@
-from os import path, walk, listdir, getcwd
+from os import path, walk, listdir
 from re import compile
 
 from numpy import array, cross
 
-from myfunctions import printv
+from old_files.myfunctions import printv
 from ase.io import read as read_xml
 
 

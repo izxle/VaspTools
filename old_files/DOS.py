@@ -1,11 +1,10 @@
 #!/bin/env python
 
 from os import path, getcwd, listdir
-import numpy as np
 import argparse
 from re import sub
-from densityofstates import DOS
-from myfunctions import parse_int_set, correct_z, tag_layers
+from old_files.densityofstates import DOS
+from old_files.myfunctions import parse_int_set, correct_z, tag_layers
 
 try:
     from ase.io import read
