@@ -1,10 +1,11 @@
 
-from .result import Result
+from .result import Result, Oszicar
 from os import path, walk
 import re
+from glob import glob
 
 try:
-    from ase.io import read as read_xml
+    from ase.io.vasp import read_vasp_xml as read_xml
 except ImportError:
     raise ImportError('ase was not found.')
 
@@ -13,7 +14,7 @@ import logging
 logger = logging.getLogger('log')
 
 
-def read(filename, directory='.', ignore=[], subdir='', **kwargs):
+def read(filename, directory='.', ignore=[], subdir=''):
 
     directories = getdirs(directory)
 
@@ -22,36 +23,39 @@ def read(filename, directory='.', ignore=[], subdir='', **kwargs):
         directories.remove(dirname)
 
     if directories:
-        result = read_directories(filename, directories, **kwargs)
+        result = read_directories(filename, directories, subdir)
     else:
-        result = read_file(filename)
+        result = read_result(filename)
     return result
 
 
-def read_file(filename):
-    name = path.basename(filename)
+def read_result(filename):
+    path.split(filename)
     atoms = read_xml(filename)
-    result = Result(name=name, atoms=atoms)
+    directory, basename = path.split(filename)
+    oszicar = read_oszicar(directory)
+    result = Result(name=basename, atoms=atoms, oszicar=oszicar)
     return result
 
 
-def read_directories(filename, directories):
+def read_directories(filename: str, directories: list, subdir: str):
+
     results = []
     for dirname in directories:
-        filename = path.join(dirname, filename)
-        result = read_file(filename)
+        file_path = path.join(dirname, subdir, filename)
+        result = read_result(file_path)
         results.append(result)
 
     return results
 
 
 def hasdirs(fpath):
-    root, directories, files = next(walk(fpath))
-    return bool(directories)
+    # root, directories, files = next(walk(fpath))
+    return bool(glob(fpath + '/*/'))
 
 
 def getdirs(fpath):
-    return next(walk(fpath))[1]
+    return glob(fpath + '/*/')
 
 
 oszicar_regex_string = (  # electronic step
@@ -68,19 +72,18 @@ oszicar_regex_string = (  # electronic step
     '(?:mag=\s*(?P<m>[+\-.0-9E]+)\s*)?'  # magnetic moment
     )
 oszicar_regex = re.compile(oszicar_regex_string)
+float_params = ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
+
+
+def float_match_values(match):
+    return {k: float(v) for k, v in match.groupdict().items()}
 
 
 def read_oszicar(directory):
     filename = path.join(directory, 'OSZICAR')
-    with open(filename, 'r') as f:
-        text = f.read()
+    oszicar = Oszicar(filename=filename)
 
-    matches = [match.groupdict()
-               for match in oszicar_regex.finditer(text)]
+    # logger.debug(f'{len(matches)} matches found.')
+    # logger.debug(f'matches:\n{matches}')
 
-    logger.debug(f'{len(matches)} matches found.')
-    logger.debug(f'matches:\n{matches}')
-
-    # TODO: parse matches
-
-    return
+    return oszicar

@@ -3,7 +3,7 @@
 import logging
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from vasptools import read, hasdirs
-from vasptools import generate_report
+from vasptools.report import Report
 
 logger = logging.getLogger('log')
 
@@ -48,10 +48,21 @@ def get_args(argv=''):
 def main(argv=''):
     args = get_args(argv)
 
-    report = generate_report(**vars(args))
+    # results = read(**vars(args))
+    #
+    # report = Report(results, **vars(args))
+
+    results = read(filename=args.filename,
+                   directory=args.directory,
+                   ignore=args.ignore,
+                   subdir=args.subdir)
+
+    report = Report(results,
+                    subdir=args.subdir,
+                    surf_en=args.surf_en)
 
     print(report)
 
 
 if __name__ == '__main__':
-    main()
+    main('~/OneDrive/Documents/TAMU/structs/PtCu/111/vasprun_test/ads_O_0.25_fcc')
