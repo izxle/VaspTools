@@ -58,7 +58,7 @@ def main(argv=''):
                    subdir=args.subdir)
 
     report = Report(results,
-                    subdir=args.subdir,
+                    ads=args.ads,
                     surf_en=args.surf_en)
 
     print(report)
