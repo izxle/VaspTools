@@ -77,10 +77,10 @@ class Result:
 
         self.atoms = atoms
         self.potential_energy = atoms.get_potential_energy()
-        self.kinetic_energy = atoms.get_potential_energies()
+        self.kinetic_energy = atoms.get_kinetic_energy()
         self.total_energy = atoms.get_total_energy()
         self.temperature = atoms.get_temperature()
-        self.magmom = atoms.get_magnetic_moment()
+        # self.magmom = atoms.get_magnetic_moment()
 
         self.oszicar = oszicar
 
