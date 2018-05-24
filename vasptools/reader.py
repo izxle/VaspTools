@@ -5,7 +5,7 @@ import re
 from glob import glob
 
 try:
-    from ase.io.vasp import read_vasp_xml as read_xml
+    from ase.io import read as read_xml
 except ImportError:
     raise ImportError('ase was not found.')
 
@@ -22,17 +22,20 @@ def read(filename, directory='.', ignore=[], subdir=''):
     for dirname in ignore:
         directories.remove(dirname)
 
+    file_path = path.join(directory, filename)
+
     if directories:
-        result = read_directories(filename, directories, subdir)
+        result = read_directories(file_path, directories, subdir)
     else:
-        result = read_result(filename)
+        result = read_result(file_path)
     return result
 
 
 def read_result(filename):
     path.split(filename)
     atoms = read_xml(filename)
-    directory, basename = path.split(filename)
+    directory, outname = path.split(filename)
+    root, basename = path.split(directory)
     oszicar = read_oszicar(directory)
     result = Result(name=basename, atoms=atoms, oszicar=oszicar)
     return result
