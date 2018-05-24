@@ -25,3 +25,7 @@ else:
 mask = [a.tag < fix for a in atoms]
 constraint = FixAtoms(mask=mask)
 atoms.set_constraint(constraint)
+
+new_name = args.filename + '.fix'
+
+atoms.write(new_name, format='vasp', vasp5=True, direct=True, sort=True)
