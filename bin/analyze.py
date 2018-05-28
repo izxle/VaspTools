@@ -4,6 +4,7 @@ import logging
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from vasptools import read, hasdirs
 from vasptools.report import Report
+from vasptools.analysis import generate_report
 
 logger = logging.getLogger('log')
 
@@ -57,12 +58,14 @@ def main(argv=''):
                    ignore=args.ignore,
                    subdir=args.subdir)
 
-    report = Report(results,
-                    ads=args.ads,
-                    surf_en=args.surf_en)
+    report = generate_report(results,
+                             ads=args.ads,
+                             surf_en=args.surf_en)
 
     print(report)
 
 
 if __name__ == '__main__':
-    main('~/OneDrive/Documents/TAMU/structs/PtCu/111/vasprun_test/ads_O_0.25_fcc')
+    from os import path
+    p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/ads_O_0.25_fcc')
+    main(p)
