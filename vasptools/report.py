@@ -2,32 +2,34 @@ from .result import Result
 
 
 class Report:
-    def __init__(self, results,
-                 ads: bool=False,
-                 surf_en: bool=False):
-        self.results = results
-        self.ads = ads
-        self.surf_en = surf_en
+    def __init__(self):
+        pass
 
-        if isinstance(results, list):
-            if not all(isinstance(r, Result) for r in results):
-                raise ValueError()
-            pass
 
-        elif isinstance(results, Result):
-            pass
-
-        if ads:
-            pass
-        if surf_en:
-            pass
-
-    def repr_single(self):
-        return
-
-    def repr_multi(self):
-        return
+class ReportSingle(Report):
+    def __init__(self, result):
+        super().__init__()
+        self.result = result
 
     def __str__(self):
-        return
+        r = self.result
+        text = (
+            f'{r.name}\n'
+            f'{r.oszicar}\n')
+        return text
+
+
+class ReportCompare(Report):
+    def __init__(self):
+        super.__init__()
+
+
+class ReportAdsorption(Report):
+    def __init__(self):
+        super.__init__()
+
+
+class ReportSurface(Report):
+    def __init__(self):
+        super.__init__()
 
