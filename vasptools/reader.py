@@ -22,11 +22,11 @@ def read(filename, directory='.', ignore=[], subdir=''):
     for dirname in ignore:
         directories.remove(dirname)
 
-    file_path = path.join(directory, filename)
 
     if directories:
-        result = read_directories(file_path, directories, subdir)
+        result = read_directories(filename, directories, subdir)
     else:
+        file_path = path.join(directory, filename)
         result = read_result(file_path)
     return result
 

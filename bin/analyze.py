@@ -27,6 +27,10 @@ def get_args(argv=''):
                         help='name of the .xml file to be read')
     parser.add_argument('-i', '--ignore', default=[],
                         help='list of directory names to ignore from analysis')
+    choices = ['ni', 'ne', 'F', 'E0', 'dE', 'T', 'E', 'm', 'time']
+    parser.add_argument('--rep', '--report', default=['F', 'time'], nargs='*', dest='reps',
+                        choices=choices,
+                        help='list of results to report')
 
     parser.add_argument('--ads')
     parser.add_argument('--surf_en')
@@ -50,7 +54,6 @@ def main(argv=''):
     args = get_args(argv)
 
     # results = read(**vars(args))
-    #
     # report = Report(results, **vars(args))
 
     results = read(filename=args.filename,
@@ -60,7 +63,8 @@ def main(argv=''):
 
     report = generate_report(results,
                              ads=args.ads,
-                             surf_en=args.surf_en)
+                             surf_en=args.surf_en,
+                             reps=args.reps)
 
     print(report)
 

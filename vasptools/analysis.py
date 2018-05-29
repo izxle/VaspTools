@@ -4,7 +4,7 @@ from .report import ReportSingle, ReportCompare, ReportAdsorption, ReportSurface
 from .result import Result
 
 
-def generate_report(results: list, ads: bool=False, surf_en: bool=False, **kwargs):
+def generate_report(results: list, ads: bool=False, surf_en: bool=False, reps=None, **kwargs):
 
     if isinstance(results, Result):
         pass
@@ -18,7 +18,7 @@ def generate_report(results: list, ads: bool=False, surf_en: bool=False, **kwarg
         elif surf_en:
             report = ReportSurface(results)
         else:
-            report = ReportCompare(results)
+            report = ReportCompare(results, reps=reps)
 
     else:
         raise ValueError()

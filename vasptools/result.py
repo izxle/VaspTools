@@ -23,6 +23,7 @@ class Oszicar:
         '(?:mag=\s*(?P<m>[+\-.0-9E]+)\s*)?'  # magnetic moment
         )
     _regex = re.compile(_regex_text)
+    _fields = ['ionic_step', 'e_step', 'temperature', 'F', 'E', 'E0', 'dE', 'EK', 'SP', 'SK', 'm']
     _int_fields = ['ionic_step', 'e_step']
     _float_fields = ['temperature', 'F', 'E', 'E0', 'dE', 'EK', 'SP', 'SK', 'm']
     # _str_order = ['ionic_step', 'free_energy', 'total_energy', 'E0', 'dE', 'mag', 'temperature']
@@ -112,6 +113,41 @@ class Oszicar:
                                    format=self._float_format)
                            )
 
+        # info = OrderedDict(ni=dict(name={False: 'ni', True: 'ionic step'},
+        #                            value=self.ionic_step,
+        #                            format=self._int_format),
+        #                    ne=dict(name={False: 'ne', True: 'electronic step'},
+        #                            value=self.e_step,
+        #                            format=self._int_format),
+        #                    F=dict(name={False: 'F', True: 'Free energy'},
+        #                           value=self.F,
+        #                           format=self._float_format),
+        #                    E0=dict(name={False: 'E0', True: 'energy sigma -> 20'},
+        #                            value=self.E0,
+        #                            format=self._float_format),
+        #                    dE=dict(name={False: 'dE', True: 'energy difference'},
+        #                            value=self.dE,
+        #                            format=self._scientific_format),
+        #                    KE=dict(name={False: 'KE', True: 'Kinetic energy'},
+        #                            value=self.EK,
+        #                            format=self._float_format),
+        #                    E=dict(name={False: 'E', True: 'total energy'},
+        #                           value=self.E,
+        #                           format=self._float_format),
+        #                    m=dict(name={False: 'm', True: 'magnetic moment'},
+        #                           value=self.m,
+        #                           format=self._float_format),
+        #                    T=dict(name={False: 'T', True: 'Temperature'},
+        #                           value=self.temperature,
+        #                           format=self._float_format),
+        #                    SK=dict(name={False: 'SK', True: 'thermostat K.En.'},
+        #                            value=self.SK,
+        #                            format=self._float_format),
+        #                    SP=dict(name={False: 'SP', True: 'thermostat P.En.'},
+        #                            value=self.SP,
+        #                            format=self._float_format)
+        #                    )
+
         key_format = 4
         if repr:
             key_format = 20
@@ -134,6 +170,12 @@ class Oszicar:
                        if kwargs['value'] is not None)
 
         return text
+
+    def items(self):
+        for name, value in vars(self).items():
+            if name not in self._fields or value is None:
+                continue
+            yield name, value
 
     def __str__(self):
         return self.tostring()
@@ -163,6 +205,14 @@ class Result:
 
     def set_oszicar(self, oszicar):
         self.oszicar = oszicar
+        for name, value in oszicar.items():
+            self.set(name, value)
+
+    def set(self, name, value):
+        setattr(self, name, value)
+
+    def get(self, name, default=None):
+        return getattr(self, name, default)
 
     def __str__(self):
         return f'{self.name} {self.potential_energy}'
