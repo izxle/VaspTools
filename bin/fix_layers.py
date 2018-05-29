@@ -21,7 +21,7 @@ parser.add_argument('-l', '--layers', type=int)
 args = parser.parse_args()
 
 atoms = read(args.filename)
-tags, positions = get_layers(atoms, (0,0,1), 0.3)
+tags, positions = get_layers(atoms, (0, 0, 1), 0.3)
 atoms.set_tags(tags)
 
 if args.fix:
