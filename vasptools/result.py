@@ -143,13 +143,15 @@ class Oszicar:
 
 
 class Result:
-    def __init__(self, atoms: Atoms, oszicar: Oszicar, name: str=None, reps=('PE')):
+    def __init__(self, atoms: Atoms, oszicar: Oszicar, name: str=None, time: float=None, reps=('PE')):
 
         self.reps = reps
         if name is None:
             self.name = str(self.atoms)
         else:
             self.name = name
+
+        self.time = time
 
         self.atoms = atoms
         self.potential_energy = atoms.get_potential_energy()
@@ -158,7 +160,6 @@ class Result:
         self.temperature = atoms.get_temperature()
         # self.magmom = atoms.get_magnetic_moment()
         self.set_oszicar(oszicar)
-        # for attr, value in oszicar
 
     def set_oszicar(self, oszicar):
         self.oszicar = oszicar

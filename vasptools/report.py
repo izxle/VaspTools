@@ -15,7 +15,8 @@ class ReportSingle(Report):
         r = self.result
         text = (
             f'{r.name}\n'
-            f'{r.oszicar}\n')
+            f'{r.oszicar}'
+            f'time: {r.time/3600:8.4f} h | {r.time:9.3f} s')
         return text
 
 

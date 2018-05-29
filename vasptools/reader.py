@@ -37,7 +37,9 @@ def read_result(filename):
     directory, outname = path.split(filename)
     root, basename = path.split(directory)
     oszicar = read_oszicar(directory)
-    result = Result(name=basename, atoms=atoms, oszicar=oszicar)
+    time = read_time(directory)
+
+    result = Result(name=basename, atoms=atoms, oszicar=oszicar, time=time)
     return result
 
 
@@ -61,25 +63,23 @@ def getdirs(fpath):
     return glob(fpath + '/*/')
 
 
-oszicar_regex_string = (  # electronic step
-    '(?:[A-Z]{3}:\s*(?P<e_step>[0-9]+)[+\-.0-9E ]+\s*)?' 
-    '(?P<io_step>[0-9]+)\s*'  # ionic step
-    '(?:T=\s*(?P<Temp>[.0-9]+)\s*)?'  # temperature
-    '(?:E=\s*(?P<E>[+\-.0-9E]+)\s*)?'  # total energy (Potential+Kinetic)
-    'F=\s*(?P<F>[+\-.0-9E]+)\s*'  # total free energy
-    'E0=\s*(?P<E0>[+\-.0-9E]+)\s*'  # energy for sigma -> 0
-    '(?:d E =\s*(?P<dE>[+\-.0-9E]+)\s*)?'  # energy difference
-    '(?:EK=\s*(?P<EK>[+\-.0-9E]+)\s*)?'  # Kinetic energy
-    '(?:SP=\s*(?P<SP>[+\-.0-9E]+)\s*)?'  # thermostat PotentialEnergy
-    '(?:SK=\s*(?P<SK>[+\-.0-9E]+)\s*)?'  # thermostat KineticEnergy
-    '(?:mag=\s*(?P<m>[+\-.0-9E]+)\s*)?'  # magnetic moment
-    )
-oszicar_regex = re.compile(oszicar_regex_string)
-float_params = ['F', 'F_n', 'E0', 'E', 'Temp', 'area', 'm', 'dE', 't']
-
-
 def float_match_values(match):
     return {k: float(v) for k, v in match.groupdict().items()}
+
+
+def read_time(directory):
+    filename = path.join(directory, 'OUTCAR')
+
+    # TODO: read more from OUTCAR, maybe create OUTCAR object
+    with open(filename, 'r') as f:
+        text = f.read()
+
+    regex = re.compile('Total CPU time used \(sec\):\s*([+\-.0-9E]+)')
+    m = regex.search(text)
+    group = m.group(1)
+    time = float(group)
+
+    return time
 
 
 def read_oszicar(directory):
