@@ -70,6 +70,4 @@ def main(argv=''):
 
 
 if __name__ == '__main__':
-    from os import path
-    p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/ads_O_0.25_fcc')
-    main(p)
+    main()
