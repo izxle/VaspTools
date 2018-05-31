@@ -4,13 +4,13 @@ from os import path
 
 
 class Report:
-    def __init__(self):
-        pass
+    def __init__(self, subdir=''):
+        self.subdir = subdir
 
 
 class ReportSingle(Report):
-    def __init__(self, result, reps=None):
-        super().__init__()
+    def __init__(self, result, subdir='', reps=None):
+        super().__init__(subdir=subdir)
         self.result = result
         self.reps = reps
 
@@ -37,8 +37,8 @@ class ReportSingle(Report):
 
 class ReportCompare(Report):
     _line_lenght = 62
-    def __init__(self, results, reps=('F', 'time')):
-        super().__init__()
+    def __init__(self, results, subdir: str='', reps=('F', 'time')):
+        super().__init__(subdir=subdir)
         self.results = results
         if not reps:
             reps = ('F', 'time')
@@ -48,6 +48,8 @@ class ReportCompare(Report):
             self.values[rep] = []
             for res in results:
                 self.values[rep].append(res.get(rep))
+
+        self.names = []
 
     def __str__(self):
         text = ''
@@ -72,7 +74,12 @@ class ReportCompare(Report):
 
             text += f' name       | {rep:9} |\n'
             for res, rval in zip(self.results, relative_values):
-                name = path.basename(res.name)
+                root, basename = path.split(res.name)
+                if basename == self.subdir:
+                    name = root
+                else:
+                    name = res.name
+                name = path.basename(name)
                 text += (f'{name[:11]:11} | {res.get(rep):9.3f} |'
                          f'{"*" * int(round(rval))}\n')
             text += f"{'':25}{'':->{self._line_lenght}}>\n"
@@ -80,11 +87,11 @@ class ReportCompare(Report):
 
 
 class ReportAdsorption(Report):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, subdir):
+        super().__init__(subdir)
 
 
 class ReportSurface(Report):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, subdir):
+        super().__init__(subdir)
 

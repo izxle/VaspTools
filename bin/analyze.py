@@ -64,7 +64,8 @@ def main(argv=''):
     report = generate_report(results,
                              ads=args.ads,
                              surf_en=args.surf_en,
-                             reps=args.reps)
+                             reps=args.reps,
+                             subdir=args.subdir)
 
     print(report)
 
