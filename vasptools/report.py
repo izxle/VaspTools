@@ -1,5 +1,6 @@
 from .result import Result
 import numpy as np
+from os import path
 
 
 class Report:
@@ -71,7 +72,8 @@ class ReportCompare(Report):
 
             text += f' name       | {rep:9} |\n'
             for res, rval in zip(self.results, relative_values):
-                text += (f'{res.name[:11]:11} | {res.get(rep):9.3f} |'
+                name = path.basename(res.name)
+                text += (f'{name[:11]:11} | {res.get(rep):9.3f} |'
                          f'{"*" * int(round(rval))}\n')
             text += f"{'':25}{'':->{self._line_lenght}}>\n"
         return text
