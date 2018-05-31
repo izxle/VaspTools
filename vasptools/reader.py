@@ -34,11 +34,11 @@ def read(filename, directory='.', ignore=[], subdir=''):
 def read_result(filename):
     atoms = read_xml(filename)
     directory, outname = path.split(filename)
-    # root, basename = path.split(directory)
+    name = path.abspath(directory)
     oszicar = read_oszicar(directory)
     time = read_time(directory)
 
-    result = Result(name=directory, atoms=atoms, oszicar=oszicar, time=time)
+    result = Result(name=name, atoms=atoms, oszicar=oszicar, time=time)
     return result
 
 
