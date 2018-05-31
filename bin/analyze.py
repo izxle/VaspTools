@@ -28,7 +28,7 @@ def get_args(argv=''):
     parser.add_argument('-i', '--ignore', default=[],
                         help='list of directory names to ignore from analysis')
     choices = ['ni', 'ne', 'F', 'E0', 'dE', 'T', 'E', 'm', 'time']
-    parser.add_argument('--rep', '--report', default=['F', 'time'], nargs='*', dest='reps',
+    parser.add_argument('--rep', '--report', nargs='*', dest='reps',
                         choices=choices,
                         help='list of results to report')
 
