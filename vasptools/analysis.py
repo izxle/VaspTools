@@ -7,8 +7,7 @@ from .result import Result
 def generate_report(results: list, ads: bool=False, surf_en: bool=False, reps=None, **kwargs):
 
     if isinstance(results, Result):
-        pass
-        report = ReportSingle(results)
+        report = ReportSingle(results, reps=reps)
     elif isinstance(results, list):
         if not all(isinstance(r, Result) for r in results):
             raise ValueError()

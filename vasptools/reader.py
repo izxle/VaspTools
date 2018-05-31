@@ -32,14 +32,13 @@ def read(filename, directory='.', ignore=[], subdir=''):
 
 
 def read_result(filename):
-    path.split(filename)
     atoms = read_xml(filename)
     directory, outname = path.split(filename)
     root, basename = path.split(directory)
     oszicar = read_oszicar(directory)
     time = read_time(directory)
 
-    result = Result(name=basename, atoms=atoms, oszicar=oszicar, time=time)
+    result = Result(name=filename, atoms=atoms, oszicar=oszicar, time=time)
     return result
 
 
@@ -76,8 +75,11 @@ def read_time(directory):
 
     regex = re.compile('Total CPU time used \(sec\):\s*([+\-.0-9E]+)')
     m = regex.search(text)
-    group = m.group(1)
-    time = float(group)
+    if m:
+        group = m.group(1)
+        time = float(group)
+    else:
+        time = float('NaN')
 
     return time
 

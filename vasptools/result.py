@@ -24,7 +24,7 @@ class Oszicar:
         )
     _regex = re.compile(_regex_text)
     _fields = ['ionic_step', 'e_step', 'temperature', 'F', 'E', 'E0', 'dE', 'EK', 'SP', 'SK', 'm']
-    _int_fields = ['ionic_step', 'e_step']
+    _int_fields = ['ionic_step', 'e_step', 'ni', 'ne']
     _float_fields = ['temperature', 'F', 'E', 'E0', 'dE', 'EK', 'SP', 'SK', 'm']
     # _str_order = ['ionic_step', 'free_energy', 'total_energy', 'E0', 'dE', 'mag', 'temperature']
     _float_format = '9.4f'
@@ -73,9 +73,39 @@ class Oszicar:
 
     def set(self, key, value):
         setattr(self, key, value)
+        if key == 'ionic_step':
+            setattr(self, 'ni', value)
+        elif key == 'e_step':
+            setattr(self, 'ne', value)
 
     def get(self, key, default=None):
         return getattr(self, key, default)
+
+    def report(self, reps):
+        if not reps:
+            reps = ['F', 'E0', 'dE']
+        text = ''
+        # headers
+        str_format = dict()
+        # TODO: support double digit formats
+        text += f' {"ni":{self._int_format[0]}}  {"ne":{self._int_format[0]}} '
+        for rep in reps:
+            if rep in self._float_fields:
+                str_format[rep] = self._float_format
+            elif rep in self._int_fields:
+                str_format[rep] = self._int_format
+            else:
+                raise NotImplementedError(f'formatter for {rep} not available')
+            text += f' {rep:{str_format[rep][0]}} '
+        text = text[:-1] + '\n'
+        # body
+        for m in self.matches:
+            text += (f' {m["ionic_step"]:{self._int_format}} '
+                     f' {m["e_step"]:{self._int_format}} ')
+            text += ' '.join(f'{m[rep]:{str_format[rep]}} '
+                             for rep in reps)
+            text += '\n'
+        return text
 
     def tostring(self, repr=False):
         info = OrderedDict(ni=dict(name='ni',
