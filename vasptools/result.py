@@ -1,6 +1,7 @@
 
 from ase.atoms import Atoms
-from collections import OrderedDict
+from collections import OrderedDict, Counter
+import numpy as np
 import re
 
 import logging
@@ -215,9 +216,8 @@ class Oszicar:
 
 
 class Result:
-    def __init__(self, atoms: Atoms, oszicar: Oszicar, name: str=None, time: float=None, reps=('PE')):
+    def __init__(self, atoms: Atoms, oszicar: Oszicar, name: str=None, time: float=None):
 
-        self.reps = reps
         if name is None:
             self.name = str(self.atoms)
         else:
@@ -231,12 +231,56 @@ class Result:
         self.total_energy = atoms.get_total_energy()
         self.temperature = atoms.get_temperature()
         # self.magmom = atoms.get_magnetic_moment()
+
+        self.elements = Counter(atoms.get_chemical_symbols())
+
+        self.set_area()
+
         self.set_oszicar(oszicar)
+        n = len(atoms)
+        if self.get('F'):
+            self.F_n = self.F / n
+        else:
+            self.F_n = self.potential_energy / n
+
+    def report(self, reps=None):
+        if not reps:
+            reps = ['F', 'E0', 'dE']
+        o = self.oszicar
+        text = ''
+        # headers
+        str_format = dict()
+        # TODO: support double digit formats
+        text += f' {"ni":{o._int_format[0]}}  {"ne":{o._int_format[0]}} '
+        for rep in reps:
+            if rep in o._float_fields:
+                str_format[rep] = o._float_format
+            elif rep in o._int_fields:
+                str_format[rep] = o._int_format
+            else:
+                raise NotImplementedError(f'formatter for {rep} not available')
+            text += f' {rep:{str_format[rep][0]}} '
+        text += ' F_n\n'
+        # body
+        for m in o.matches:
+            text += (f' {m["ionic_step"]:{o._int_format}} '
+                     f' {m["e_step"]:{o._int_format}} ')
+            text += ' '.join(f'{m[rep]:{str_format[rep]}} '
+                             for rep in reps)
+            text += f' {self.F_n:{o._float_format}}'
+            text += '\n'
+        return text
 
     def set_oszicar(self, oszicar):
         self.oszicar = oszicar
         for name, value in oszicar.items():
             self.set(name, value)
+
+    def set_area(self, area=None):
+        if area is None:
+            a, b, c = self.atoms.get_cell()
+            area = np.cross(a, b)[2]
+        self.area = area
 
     def set(self, name, value):
         setattr(self, name, value)
@@ -245,6 +289,8 @@ class Result:
         return getattr(self, name, default)
 
     def __str__(self):
-        return f'{self.name} {self.potential_energy}'
+        text = str(self.oszicar)
+        text += f'F_n  {self.F_n:{self.oszicar._float_format}}\n'
+        return text
 
 
