@@ -40,6 +40,7 @@ class ReportSingle(Report):
 
 class ReportCompare(Report):
     _line_len = 62
+    _float_format = '9.3f'
     def __init__(self, results, subdir: str='', reps=('F', 'time')):
         super().__init__(subdir=subdir)
         self.results = results
@@ -83,7 +84,7 @@ class ReportCompare(Report):
                 else:
                     name = res.name
                 name = path.basename(name)
-                text += (f'{name[:11]:11} | {res.get(rep):9.3f} |'
+                text += (f'{name[:self._name_len]:{self._name_len}} | {res.get(rep):{self._float_format}} |'
                          f'{"*" * int(round(rval))}\n')
             text += f"{'':25}{'':->{self._line_len}}>\n"
         return text
