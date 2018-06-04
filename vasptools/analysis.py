@@ -1,6 +1,6 @@
 
 from .reader import read
-from .report import ReportCompare, ReportCompareAdsorption
+from .report import ReportCompare, ReportCompareAdsorption, ReportCompareSurface
 from .report import ReportSingle, ReportSingleAdsorption, ReportSimpleSurface
 from .result import Result
 
@@ -35,8 +35,11 @@ def generate_report(results: list, ads: bool=False, surf_en: bool=False, reps=No
                                              slab=slab,
                                              ads=adsorbate,
                                              subdir=subdir)
-        # elif surf_en:
-        #     report = ReportSurface(results)
+        elif surf_en:
+            bulk = read(directory=surf_en.bulk)
+            report = ReportCompareSurface(results=results,
+                                          bulk=bulk,
+                                          area=surf_en.area)
         else:
             report = ReportCompare(results, reps=reps, subdir=subdir)
         # else:

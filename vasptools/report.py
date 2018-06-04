@@ -182,8 +182,31 @@ class ReportSimpleSurface(Report):
 
 
 class ReportCompareSurface(Report):
-    def __init__(self, results, bulk, subdir=''):
+    def __init__(self, results, bulk, area=None, subdir=''):
         super().__init__(subdir)
         self.results = results
         self.bulk = bulk
-        # TODO: finish ReportCompareSurface
+
+        surf_energies = dict()
+        for slab in results:
+            report = ReportSimpleSurface(slab=slab,
+                                         bulk=bulk,
+                                         area=area)
+            # name handling
+            root, basename = path.split(report.name)
+            if basename == self.subdir:
+                name = root
+            else:
+                name = report.name
+            name = path.basename(name)
+            surf_energies[name] = report
+
+        self.surf_energies = surf_energies
+
+    def __str__(self):
+        text = 'Surface Energies\n'
+
+        for name, report in self.surf_energies.items():
+            text += f'{name[:self._name_len]:{self._name_len}} {report.surface_energy:{self._float_format}}\n'
+
+        return text
