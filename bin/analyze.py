@@ -25,17 +25,31 @@ def get_args(argv=''):
 
     parser.add_argument('-n', '--name', dest='filename', default='vasprun.xml',
                         help='name of the .xml file to be read')
-    parser.add_argument('-i', '--ignore', default=[],
+    parser.add_argument('-i', '--ignore', nargs='+',
                         help='list of directory names to ignore from analysis')
     choices = ['ni', 'ne', 'F', 'E0', 'dE', 'T', 'E', 'm', 'time']
     parser.add_argument('--rep', '--report', nargs='*', dest='reps',
                         choices=choices,
                         help='list of results to report')
 
-    parser.add_argument('--ads')
-    parser.add_argument('--surf_en')
+    parser.add_argument('--ads', nargs='+',
+                        help='adsorption energy calculation, expects bulk and adsorbate information')
+    parser.add_argument('--surf_en', nargs='+',
+                        help='surface energy calculation, expects bulk information')
     parser.add_argument('--sd', '--subdir', '--sub-directory', dest='subdir', default='',
                         help='name of the subdirectory on which to do the analysis')
+
+    parsadd = ArgumentParser(prefix_chars='+', **options)
+    parsadd.add_argument('part', nargs='*')
+    parsadd.add_argument('+s', '++slab')
+    parsadd.add_argument('+a', '++ads', '++adsorbate', dest='adsorbate')
+    parsadd.add_argument('+v', action='store_true')
+
+    parsurf = ArgumentParser(prefix_chars='+', **options)
+    parsurf.add_argument('part', nargs='*')
+    parsurf.add_argument('+b', '++bulk')
+    parsurf.add_argument('+a', '++area', nargs='?', type=float, const=True)
+    parsurf.add_argument('+v', action='store_true')
 
     if argv:
         if isinstance(argv, str):
@@ -46,6 +60,12 @@ def get_args(argv=''):
     else:
         # get arguments from console
         args = parser.parse_args()
+
+    if args.ads:
+        args.ads = parsadd.parse_args(args.ads)
+
+    if args.surf_en:
+        args.surf_en = parsurf.parse_args(args.surf_en)
 
     return args
 
