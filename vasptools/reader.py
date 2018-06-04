@@ -14,20 +14,23 @@ import logging
 logger = logging.getLogger('log')
 
 
-def read(filename, directory='.', ignore=[], subdir=''):
+def read(filename='vasprun.xml', directory='.', ignore=None, subdir=''):
 
     directories = getdirs(directory)
 
     # remove unwanted directories
-    for dirname in ignore:
-        directories.remove(dirname)
+    if ignore is not None:
+        for dirname in ignore:
+            abs_dirname = path.abspath(path.join(directory, dirname))
+            directories.remove(abs_dirname)
 
 
     if directories:
         result = read_directories(filename, directories, subdir)
     else:
         file_path = path.join(directory, filename)
-        result = read_result(file_path)
+        abs_path = path.abspath(file_path)
+        result = read_result(abs_path)
     return result
 
 
@@ -59,7 +62,9 @@ def hasdirs(fpath):
 
 
 def getdirs(fpath):
-    return glob(fpath + '/*/')
+    directories = [path.abspath(p)
+                   for p in glob(fpath + '/*/')]
+    return directories
 
 
 def float_match_values(match):
