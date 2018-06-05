@@ -251,7 +251,7 @@ class Result:
         # headers
         str_format = dict()
         # TODO: support double digit formats
-        text += f' {"ni":{o._int_format[0]}}  {"ne":{o._int_format[0]}} '
+        text += f'   {"ni":{o._int_format[0]}}  {"ne":{o._int_format[0]}}'
         for rep in reps:
             if rep in o._float_fields:
                 str_format[rep] = o._float_format
@@ -262,6 +262,7 @@ class Result:
             text += f' {rep:{str_format[rep][0]}} '
         text += ' F_n\n'
         # body
+        # TODO: fix F_n value, show value for every iteration
         for m in o.matches:
             text += (f' {m["ionic_step"]:{o._int_format}} '
                      f' {m["e_step"]:{o._int_format}} ')
