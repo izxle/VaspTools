@@ -1,6 +1,7 @@
 from .result import Result
 import numpy as np
 from os import path
+from numbers import Number
 from collections import Counter
 
 
@@ -9,6 +10,33 @@ class Report:
     _name_len = 11
     def __init__(self, subdir=''):
         self.subdir = subdir
+        self.time = 0
+
+    def time_to_str(self, time, units=True):
+        if not isinstance(time, Number) or np.isnan(time):
+            return "Didn't finish"
+
+        elif time < 60:
+            rel_time = time
+            formatter = '6.3f'
+            unit = 's'
+        elif time / 60 < 60:
+            rel_time = time / 60
+            unit = 'min'
+            formatter = '7.4f'
+        else:
+            rel_time = time / 3600
+            unit = 'h'
+            formatter = '8.4f'
+
+        text = f'{rel_time:{formatter}}'
+
+        if units:
+            text += f' {unit}'
+            if unit != 's':
+                text += f' | {time:9.2f} s'
+
+        return text
 
 
 class ReportSingle(Report):
@@ -25,10 +53,7 @@ class ReportSingle(Report):
         else:
             results = r.report(self.reps)
 
-        if isinstance(r.time, float):
-            time = f'time: {r.time/3600:8.4f} h | {r.time:9.3f} s'
-        else:
-            time = r.time
+        time = self.time_to_str(r.time)
 
         text = (
             f'{r.name}\n'
