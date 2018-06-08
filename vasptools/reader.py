@@ -48,6 +48,11 @@ def read_result(filename):
 def read_directories(filename: str, directories: list, subdir: str):
 
     results = []
+    try:
+        directories.sort(key=float)
+    except ValueError:
+        directories = sorted(directories)
+
     for dirname in directories:
         file_path = path.join(dirname, subdir, filename)
         result = read_result(file_path)
