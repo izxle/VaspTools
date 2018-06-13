@@ -32,6 +32,9 @@ def get_args(argv=''):
                         choices=choices,
                         help='list of results to report')
 
+    parser.add_argument('--log', nargs='?', const=True)
+    parser.add_argument('--debug', action='store_true')
+
     parser.add_argument('--ads', nargs='+',
                         help='adsorption energy calculation, expects bulk and adsorbate information')
     parser.add_argument('--surf_en', nargs='+',

@@ -35,6 +35,8 @@ def read(filename='vasprun.xml', directory='.', ignore=None, subdir=''):
 
 
 def read_result(filename):
+    # TODO: read other files if xml isn't ready
+    logger.info(f'reading {filename}')
     atoms = read_xml(filename)
     directory, outname = path.split(filename)
     name = path.abspath(directory)
@@ -42,6 +44,7 @@ def read_result(filename):
     time = read_time(directory)
 
     result = Result(name=name, atoms=atoms, oszicar=oszicar, time=time)
+    logger.debug(f'result:\n{result}')
     return result
 
 
@@ -54,11 +57,23 @@ def read_directories(filename: str, directories: list, subdir: str):
         directories = sorted(directories)
 
     for dirname in directories:
-        file_path = path.join(dirname, subdir, filename)
-        result = read_result(file_path)
-        results.append(result)
+        directory = path.join(dirname, subdir)
+        file_path = path.join(directory, filename)
+        if all_vasp_outputs(directory, filename):
+            logger.info(f'attempting to read {file_path}')
+            result = read_result(file_path)
+            logger.debug(f'appending result:\n{results}')
+            results.append(result)
+        else:
+            logger.info(f'skipping {dirname}: no valid output files')
 
     return results
+
+
+def all_vasp_outputs(fpath, filename='vasprun.xml'):
+    outputfiles = ['OSZICAR', filename, 'OUTCAR']
+    return all(path.isfile(path.join(fpath, fname))
+               for fname in outputfiles)
 
 
 def hasdirs(fpath):
@@ -95,8 +110,10 @@ def read_time(directory):
 
 
 def read_oszicar(directory):
+    logger.info(f'reading OSZICAR in {directory}')
     filename = path.join(directory, 'OSZICAR')
     oszicar = Oszicar(filename=filename)
+    logger.debug(f'OSZICAR:\n{oszicar}')
 
     # logger.debug(f'{len(matches)} matches found.')
     # logger.debug(f'matches:\n{matches}')
