@@ -1,4 +1,5 @@
 from old_files.reader import *
+from old_files.reader import *
 from old_files.myfunctions import printv
 
 class Ediff(object):

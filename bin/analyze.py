@@ -75,6 +75,22 @@ def get_args(argv=''):
     if args.surf_en:
         args.surf_en = parsurf.parse_args(args.surf_en)
 
+    # TODO: finish implementing logging
+    if args.debug:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+    logger.setLevel(log_level)
+    if args.log:
+        fn = args.log
+        if args.log == True:
+            fh = logging.StreamHandler()
+            logging.basicConfig(level=log_level)
+        else:
+            fn = args.log
+
+
+
     return args
 
 
@@ -99,6 +115,18 @@ def main(argv=''):
 
 
 if __name__ == '__main__':
-    from os import path
+    from os import path, chdir
     p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/ads_O_0.25_fcc')
-    main(f'{p}')
+    main(f'{p} --log')
+    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/ads_O_0.25_fcc')
+    # chdir(p)
+    # main(f'--ads +s ../surface_relaxation +a ../O')
+    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/')
+    # chdir(p)
+    # main(f'--ads +s surface_relaxation +a O -i O')
+    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/surface_relaxation')
+    # chdir(p)
+    # main(f'--surf_en +b ../bulk')
+    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/')
+    # chdir(p)
+    # main(f'--surf_en +b bulk -i O')

@@ -5,4 +5,3 @@ from .tools import fix_layers, set_tags, invert_z, correct_z, tag_layers
 
 
 __all__ = ['result', 'read', 'hasdirs', 'generate_report']
-

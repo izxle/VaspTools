@@ -61,6 +61,11 @@ def fix_layers(atoms: Atoms, fix: int, direction=(0, 0, 1)):
     atoms.set_constraint(constraint)
 
 
+def tag_layers(atoms):
+    direction = (0, 0, 1)
+    set_tags(atoms, direction)
+
+
 def set_tags(atoms, direction=(0, 0, 1)):
     tags, positions = get_layers(atoms, direction, 0.3)
     atoms.set_tags(tags)
