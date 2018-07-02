@@ -67,6 +67,7 @@ class Oszicar:
             matches.append(info)
 
         self.matches = matches
+        # TODO: handle no matches exception
         self.last_match = matches[-1]
         # set last match values as attributes
         for k, v in self.last_match.items():

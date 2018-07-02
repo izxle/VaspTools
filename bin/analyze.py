@@ -27,7 +27,8 @@ def get_args(argv=''):
                         help='name of the .xml file to be read')
     parser.add_argument('-i', '--ignore', nargs='+',
                         help='list of directory names to ignore from analysis')
-    choices = ['ni', 'ne', 'F', 'E0', 'dE', 'T', 'E', 'm', 'time']
+    # TODO: test --rep F_n
+    choices = ['ni', 'ne', 'F', 'F_n', 'E0', 'dE', 'T', 'E', 'm', 'time']
     parser.add_argument('--rep', '--report', nargs='*', dest='reps',
                         choices=choices,
                         help='list of results to report')
@@ -51,8 +52,12 @@ def get_args(argv=''):
     parsurf = ArgumentParser(prefix_chars='+', **options)
     parsurf.add_argument('part', nargs='*')
     parsurf.add_argument('+b', '++bulk')
+
+    # TODO: fix const handling
     parsurf.add_argument('+a', '++area', nargs='?', type=float, const=True)
     parsurf.add_argument('+v', action='store_true')
+
+    # TODO: add support for segregation energy
 
     if argv:
         if isinstance(argv, str):

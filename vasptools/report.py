@@ -81,6 +81,9 @@ class ReportCompare(Report):
         self.names = []
 
     def __str__(self):
+
+        # TODO: sort results to name
+
         text = ''
         for rep in self.reps:
             text += '\n'
@@ -109,6 +112,7 @@ class ReportCompare(Report):
                 else:
                     name = res.name
                 name = path.basename(name)
+                # TODO: fix bug when name is one character
                 text += (f'{name[:self._name_len]:{self._name_len}} | {res.get(rep):{self._float_format}} |'
                          f'{"*" * int(round(rval))}\n')
             text += f"{'':25}{'':->{self._line_len}}>\n"
