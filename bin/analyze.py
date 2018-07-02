@@ -115,18 +115,4 @@ def main(argv=''):
 
 
 if __name__ == '__main__':
-    from os import path, chdir
-    p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/ads_O_0.25_fcc')
-    main(f'{p} --log')
-    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/ads_O_0.25_fcc')
-    # chdir(p)
-    # main(f'--ads +s ../surface_relaxation +a ../O')
-    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/')
-    # chdir(p)
-    # main(f'--ads +s surface_relaxation +a O -i O')
-    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/surface_relaxation')
-    # chdir(p)
-    # main(f'--surf_en +b ../bulk')
-    # p = path.expanduser('~/OneDrive/Documents/TAMU/structs/PtCu/111/224/vasprun_test/')
-    # chdir(p)
-    # main(f'--surf_en +b bulk -i O')
+    main()
