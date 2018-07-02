@@ -209,6 +209,9 @@ class Oszicar:
                 continue
             yield name, value
 
+    def __format__(self, format_spec):
+        return f'{str(self):{format_spec}}'
+
     def __str__(self):
         return self.tostring()
 
@@ -289,6 +292,9 @@ class Result:
 
     def get(self, name, default=None):
         return getattr(self, name, default)
+
+    def __format__(self, format_spec):
+        return f'{str(self):{format_spec}}'
 
     def __str__(self):
         text = str(self.oszicar)
