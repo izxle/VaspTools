@@ -35,8 +35,8 @@ def get_args(argv=''):
                         help='get d-band center')
     parser.add_argument('-w', '--write', action='store_true', default=False,
                         help='write requested DOS data')
-    parser.add_argument('-o', '--orbitals', nargs='*', default=['s', 'p', 'd', 'sum'],
-                        choices=['s', 'p', 'd', 'f', 'sum'],
+    parser.add_argument('-o', '--orbitals', nargs='*', default=['s', 'p', 'd'],
+                        choices=['s', 'p', 'd', 'sum'],
                         help='orbitals to be reported')
     parser.add_argument('-p', '--plot', action='store_true',
                         help='plot density of states')
@@ -72,15 +72,19 @@ def get_args(argv=''):
         # read structure
         atoms = read(filename)
 
-        if args.elementslements:
+        if not indices:
+            indices = set(range(len(atoms)))
+
+        if args.elements:
             element_indices = {a.index + 1 for a in atoms if a.symbol in args.elementslements}
             indices.intersection_update(element_indices)
         if args.layers:
             # adjust atoms z to origin
-            atoms = correct_z(atoms)
+            correct_z(atoms)
             tag_layers(atoms)
             # get atoms in layers of interest
-            layer_indices = {a.index + 1 for a in atoms if a.tag in args.layers}
+
+            layer_indices = {a.index + 1 for a in atoms if a.tag + 1 in args.layers}
             indices.intersection_update(layer_indices)
         if not indices:
             contraints = []
