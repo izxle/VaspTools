@@ -10,11 +10,11 @@ from myfunctions import parse_int_set, correct_z, tag_layers
 try:
     from ase.io import read
 except ImportError:
-    print "This session does not have ASE installed."
+    print("This session does not have ASE installed.")
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    print "This session does not have matplotlib installed."
+    print("This session does not have matplotlib installed.")
 
 def get_args(args):
     parser = argparse.ArgumentParser(
@@ -57,7 +57,7 @@ def get_args(args):
     for f in res.directories:
         nams = listdir(f)
         if res.name not in nams:
-            print "Omitting directory '{}': No '{}' found.".format(f, res.name)
+            print("Omitting directory '{}': No '{}' found.".format(f, res.name))
             res.directories.remove(f)
             continue
         indexes = res.n
@@ -68,7 +68,7 @@ def get_args(args):
             # read structure
             # TODO: read other formats?
             atoms = read(nam, format='vasp')
-            indexes = res.n if res.n else set(xrange(1, len(atoms) + 1))
+            indexes = res.n if res.n else set(range(1, len(atoms) + 1))
             if res.e:
                 X_atoms = {a.index + 1 for a in atoms if a.symbol in res.e}
                 indexes.intersection_update(X_atoms)
@@ -90,8 +90,8 @@ def get_args(args):
                 msg += ', '.join(contraints)
                 msg += "), using all atoms."
         if res.v:
-            print "{} atoms found with given constraints".format(len(indexes))
-            print indexes if indexes else "  using all atoms"
+            print("{} atoms found with given constraints".format(len(indexes)))
+            print(indexes if indexes else "  using all atoms")
         n[f] = list(indexes)
     res.n = n
     
@@ -101,7 +101,7 @@ def get_args(args):
     
 def main(argv=None):
     args = get_args(argv)
-    if args.v > 1: print args
+    if args.v > 1: print(args)
     if args.test: return
     container = []
     for f in args.directories:
@@ -120,8 +120,8 @@ def main(argv=None):
                     tmp.write(res + '\n')
             else:
                 if len(args.directories) > 1:
-                    print '\n' + f
-                print res
+                    print('\n' + f)
+                print(res)
         if args.plot:
             if args.write:
                 data = dos.get_plot_data(args.plot)
