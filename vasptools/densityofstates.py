@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 class DOS:
     def __init__(self, filename: str, atom_indices: Iterable[int]=None, e_range=[-float('inf'), float('inf')]):
         self.d_band_center = None
+        self.atom_indices = atom_indices
         self.e_range = e_range
         self.read_DOSCAR(filename, atom_indices)
         self._calc_d_band_center()
@@ -139,7 +140,8 @@ class DOS:
             df = pd.DataFrame({'energy': self.energy})
             sum_names = [name for name in headers_sum if name[0] == o]
             for name in sum_names:
-                res = data[1][name].copy()
+                # initialize with data of first atom
+                res = data[self.atom_indices[1]][name].copy()
                 for i in self.atom_indices[2:]:
                     res += data[i][name]
                 cumsum_name = name.replace('sum', 'cumsum')
