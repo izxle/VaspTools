@@ -1,7 +1,7 @@
 #!/bin/env python
 import argparse
 
-import createSlab 
+from old_files import createSlab
 
 
 def get_args(argv: str=''):

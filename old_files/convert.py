@@ -1,8 +1,8 @@
 #!/bin/env python
 
-from ase.io import write, read
+from ase.io import write
 from os import listdir, getcwd
-from myfunctions import correct_z
+from old_files.myfunctions import correct_z
 import argparse
 
 def getArgs(args=None):
