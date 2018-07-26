@@ -1,9 +1,9 @@
 
-from ase import Atoms, Atom
+from ase import Atoms
 from ase.geometry import get_layers
 from ase.constraints import FixAtoms
 import logging
-
+import re
 
 logger = logging.getLogger('log')
 
@@ -28,6 +28,28 @@ def invert_z(atoms: Atoms):
     for a in atoms:
         a.z = c - a.z
     correct_z(atoms, th=0)
+
+
+def parse_int_sequence(sequence):
+    if isinstance(sequence, str):
+        sequence = sequence.split()
+    assert hasattr(sequence, '__iter__'), ('sequence must be iterable')
+
+    indices = []
+    for num in sequence:
+        if re.search('[:.-]', num):
+            num = re.split('[:.-]+', num)
+            if len(num) not in {2, 3}:
+                raise SyntaxError(f'Unrecognized number of fields ({len(num)}).')
+            start, end, *step = map(int, num)
+            if not step:
+                step = 1
+
+            assert start < end, f'Start ({start}) must be lower than end ({end}).'
+            indices += list(range(start, end + 1, step))
+        else:
+            indices.append(int(num))
+    return indices
 
 
 def len_supercell(atoms):
@@ -69,4 +91,10 @@ def tag_layers(atoms):
 def set_tags(atoms, direction=(0, 0, 1)):
     tags, positions = get_layers(atoms, direction, 0.3)
     atoms.set_tags(tags)
+
+
+def in_cell(atoms: Atoms, index: int=None):
+    scaled_position = atoms.get_scaled_positions(False)[index]
+    return all(c < 1 for c in scaled_position)
+
 
