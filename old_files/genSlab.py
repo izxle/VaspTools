@@ -5,7 +5,7 @@ import argparse
 from ase.build.surface import *
 from ase.io import read, write
 
-from myfunctions import fix_layers, correct_z
+from old_files.myfunctions import fix_layers, correct_z
 
 
 #TODO: add a vacuum by layer option

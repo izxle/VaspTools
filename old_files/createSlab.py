@@ -2,13 +2,10 @@
 from pymatgen.core.surface import SlabGenerator
 from pymatgen.io.ase import AseAtomsAdaptor
 
-from pymatgen import Structure
-
-from ase import Atoms
-from ase.constraints import FixAtoms
 from ase.io import read, write
 
-import fix_layers
+from old_files import fix_layers
+
 
 def from_slab(args):
     

@@ -3,7 +3,7 @@
 import argparse
 from os import listdir, getcwd
 from ase.io import read, write
-from myfunctions import fix_layers, correct_z
+from old_files.myfunctions import fix_layers, correct_z
 
 def getArgs(argv=[]):
     parser = argparse.ArgumentParser(

@@ -1,23 +1,37 @@
 #!/bin/env python
 
-from reader import Check, Folder
-from analysisalgs import *
-from myfunctions import parse_int_set
-from os import getcwd, walk
-import argparse
+import logging
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-def getArgs(argv=[]):
-    kw = {'description': '',
-          'formatter_class': argparse.ArgumentDefaultsHelpFormatter}
-    parser = argparse.ArgumentParser(**kw)
-    
+from old_files.analysisalgs import *
+
+logger = logging.getLogger('log')
+
+
+def get_args(argv=''):
+    """
+    parses arguments from command line
+    :param argv:
+    :return:
+    """
+    options = dict(description='',
+                   formatter_class=ArgumentDefaultsHelpFormatter)
+
+    parser = ArgumentParser(**options)
+
+    parser.add_argument('f_path', nargs='?', default='.')
+
+    parser.add_argument('--ads')
+    parser.add_argument('--surf_en')
+    parser.add_argument('--sd', '--subdir', '--sub-directory', dest='subdir', default='',
+                        help='')
+
+
+    # verbosity
     parser.add_argument('-v', action='count', help='verbosity', default=0)
     parser.add_argument('--verb', '--verbose', type=int, dest='v', default=0)
-    parser.add_argument('-p', '--path', dest='f_path', default=getcwd())
-    parser.add_argument('-f', '--folder', dest='f_path', default=getcwd())
-    parser.add_argument('--sd', '--subdir', '--sub-directory', dest='subdir',
-                        default='')
-    parser.add_argument('-i', '--ignore', nargs='+', dest='i', default=[])
+    parser.add_argument('-i', '--ignore', nargs='+', dest='i', default=[],
+                        help='directories to ignore from analysis')
     parser.add_argument('-r', '--raw', action='store_true', dest='r', 
                         default=False)
     parser.add_argument('--MD', action='store_true', default=False)
@@ -41,7 +55,7 @@ def getArgs(argv=[]):
     if not args.reps:
         args.reps = ['io_step', 'e_step', 'dE'] if args.reps == [] else []
 
-    parsadd = argparse.ArgumentParser(prefix_chars='+', **kw)
+    parsadd = ArgumentParser(prefix_chars='+', **options)
     parsadd.add_argument('part', nargs='*', default=[])
     parsadd.add_argument('+b', '++bulk', default='')
     parsadd.add_argument('+a','++ads', default='')
@@ -64,9 +78,12 @@ def getArgs(argv=[]):
     if args.v > 1: printv('args:\n', args)
     return args
 
-def main(argv=[]):
-    args = getArgs(argv)
-    if args.test: return printv(args)
+def main(argv=''):
+    args = get_args(argv)
+
+    if hasdirs(args.f_path):
+        pass
+
     kw = vars(args)
     hasdirs = next(walk(args.f_path))[1]
     # get output info
