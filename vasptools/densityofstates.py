@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 
 
 class DOS:
-    def __init__(self, filename, atom_indices=None, e_range=[-float('inf'), float('inf')]):
+    def __init__(self, filename: str, atom_indices: Iterable[int]=None, e_range=[-float('inf'), float('inf')]):
         self.d_band_center = None
         self.e_range = e_range
         self.read_DOSCAR(filename, atom_indices)
         self._calc_d_band_center()
 
-    def _set_electronic_properties(self, ncols):
+    def _set_electronic_properties(self, ncols: int):
         """
         sets the electronic properties (l, m, s) from the number of columns in DOS information
         :param ncols:
@@ -202,9 +202,3 @@ class DOS:
         ax.legend()
         plt.show()
 
-
-if __name__ == '__main__':
-    dos = DOS('/Users/izxle/OneDrive - CINVESTAV/structures/Pt/111/Pt_111_224_o.dos')
-    dos.plot()
-    print(f'd-band center: {dos.dbc}')
-    print('done')
