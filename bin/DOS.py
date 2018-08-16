@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 import argparse
 from os import path, listdir
@@ -76,7 +76,7 @@ def get_args(argv=''):
             indices = set(range(len(atoms)))
 
         if args.elements:
-            element_indices = {a.index + 1 for a in atoms if a.symbol in args.elementslements}
+            element_indices = {a.index + 1 for a in atoms if a.symbol in args.elements}
             indices.intersection_update(element_indices)
         if args.layers:
             # adjust atoms z to origin
