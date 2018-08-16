@@ -36,13 +36,11 @@ def main(argv=''):
         name = args.fname
         if sd:
             name += '_' + sd.strip('/')
-        dst_path = f'/Users/izxle/OneDrive/Documents/TAMU/structs/PtCu/111/224/ads/OH/{sd}/{name + ext}'
+        dst_path = name + ext
         src_path = path.join(args.fpath, sd, ssd, src)
-        cmd_list = ['sshpass', '-p', '14qr!$QR', 'scp', f'ada:{src_path}', dst_path]
+        cmd_list = ['sshpass', '-p', '<password>', 'scp', f'<host>:{src_path}', dst_path]
         run(cmd_list)
 
 
 if __name__ == '__main__':
-    main('/scratch/user/izxle/catalysts/PtCu/PtCu/slab/111/ads/OH/0.25 CONTCAR --sd ads_en '
-         '-s 1_0  1_2  2_0  2_1  2_5  2_6  3_0  3_1  3_4  3_5 '
-         '-e _o.vasp -n PtCu_111_224_OH')
+    main()
