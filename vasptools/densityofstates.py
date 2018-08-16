@@ -171,7 +171,7 @@ class DOS:
             self._calc_d_band_center()
         return self.d_band_center
 
-    def plot(self, orbitals: Iterable[str]=None):
+    def plot(self, orbitals: Iterable[str]=None, write=False):
         color = {'s': 'blue',
                  'p': 'green',
                  'd': 'red',
@@ -186,9 +186,11 @@ class DOS:
             names = [n for n in self.data[o].columns if '(sum)' in n]
             for name in names:
                 y = self.data[o][name].copy()
+                label = name[0] + ' band'
                 if 'dwn' in name:
                     y *= -1
-                ax.plot(x, y, label=name, color=color[o])
+                    label = None
+                ax.plot(x, y, label=label, color=color[o])
             # self.data[o].plot('energy', names, ax=ax)
 
         ax.axhline(color='black')
@@ -199,5 +201,8 @@ class DOS:
         ax.set_xlabel('$E - E_f$ (eV)')
         ax.set_ylabel('DOS')
         ax.legend()
-        plt.show()
+        if write:
+            plt.savefig('DOS.png')
+        else:
+            plt.show()
 

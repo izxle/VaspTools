@@ -129,7 +129,7 @@ def main(argv=None):
             print(text)
 
     if args.plot:
-        dos.plot(args.orbitals)
+        dos.plot(args.orbitals, write=args.write)
         # if args.write:
         #     data = dos.get_data(args.orbitals)
         #     name = path.basename(path.dirname(args.directory))
