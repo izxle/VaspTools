@@ -186,11 +186,9 @@ class DOS:
             names = [n for n in self.data[o].columns if '(sum)' in n]
             for name in names:
                 y = self.data[o][name].copy()
-                label = name[0] + ' band'
                 if 'dwn' in name:
                     y *= -1
-                    label = None
-                ax.plot(x, y, label=label, color=color[o])
+                ax.plot(x, y, color=color[o])
             # self.data[o].plot('energy', names, ax=ax)
 
         ax.axhline(color='black')
