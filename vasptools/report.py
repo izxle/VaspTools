@@ -133,7 +133,7 @@ class ReportSingleAdsorption(Report):
         self.ads_element = element
         n = whole.elements[element] / ads.elements[element]
         self.ratio = n
-        ads_en = whole.E0 - slab.E0 - n * ads.E0
+        ads_en = (whole.E0 - slab.E0 - n * ads.E0) / n
         self.ads_en = ads_en
 
     def __str__(self):
