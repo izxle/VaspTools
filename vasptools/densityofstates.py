@@ -160,7 +160,7 @@ class DOS:
         w = self.energy[mask]
         x_up, x_dwn = df.values[mask].T
         dbc = (w*x_up + w*x_dwn).sum() / (x_up + x_dwn).sum()
-        self.d_band_center = dbc
+        self.d_band_center = dbc - self.efermi
 
     @property
     def dbc(self):
