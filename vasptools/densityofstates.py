@@ -155,19 +155,10 @@ class DOS:
     def _calc_d_band_center(self):
         names = [n for n in self.data['d'].columns if '(sum)' in n]
         df = self.data['d'][names]
-<<<<<<< HEAD
         x = self.energy
         w_up, w_dwn = df.values.T
         dbc = (x*w_up + x*w_dwn).sum() / (w_up + w_dwn).sum()
         self.d_band_center = dbc
-=======
-        # filter out values after E-Fermi
-        mask = self.energy < self.efermi
-        w = self.energy[mask]
-        x_up, x_dwn = df.values[mask].T
-        dbc = (w*x_up + w*x_dwn).sum() / (x_up + x_dwn).sum()
-        self.d_band_center = dbc - self.efermi
->>>>>>> db0803a48fc1bf4b95b50286ad864ee9a7760faa
 
     @property
     def dbc(self):
