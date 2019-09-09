@@ -12,6 +12,7 @@ parser.add_argument('-f', '--fix', type=int)
 args = parser.parse_args()
 
 slab = read(args.slab)
+del slab.constraints
 invert_z(slab)
 set_tags(slab)
 
