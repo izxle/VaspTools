@@ -38,7 +38,7 @@ def get_args(argv=''):
     parser.add_argument('-o', '--orbitals', nargs='*', default=['s', 'p', 'd'],
                         choices=['s', 'p', 'd', 'sum'],
                         help='orbitals to be reported')
-    parser.add_argument('-p', '--plot', action='store_true',
+    parser.add_argument('-p', '--plot', nargs='?', const=True,
                         help='plot density of states')
     parser.add_argument('--name', default='DOSCAR',
                         help='name of DOSCAR file to read')
@@ -129,7 +129,8 @@ def main(argv=None):
             print(text)
 
     if args.plot:
-        dos.plot(args.orbitals, write=args.write)
+        save = None if args.plot is True else args.plot
+        dos.plot(args.orbitals, save=save)
         # if args.write:
         #     data = dos.get_data(args.orbitals)
         #     name = path.basename(path.dirname(args.directory))

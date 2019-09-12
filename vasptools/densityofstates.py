@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 class DOS:
-    def __init__(self, filename: str, atom_indices: Iterable[int]=None, e_range=[-float('inf'), float('inf')]):
+    def __init__(self, filename: str, atom_indices: Iterable[int]=None, e_range= (-float('inf'), float('inf'))):
         self.d_band_center = None
         self.atom_indices = atom_indices
         self.e_range = e_range
@@ -169,7 +169,7 @@ class DOS:
             self._calc_d_band_center()
         return self.d_band_center
 
-    def plot(self, orbitals: Iterable[str]=None, write=False):
+    def plot(self, orbitals: Iterable[str]=None, save: str= ''):
         color = {'s': 'blue',
                  'p': 'green',
                  'd': 'red',
@@ -197,8 +197,12 @@ class DOS:
         ax.set_xlabel('$E - E_f$ (eV)')
         ax.set_ylabel('DOS')
         ax.legend()
-        if write:
-            plt.savefig('DOS.png')
+        if save:
+            filetypes = plt.gcf().canvas.get_supported_filetypes().keys()
+            if save not in filetypes:
+                raise ValueError(f"'{save}' not supported as a file type")
+            name = f'DOS.{save}'
+            plt.savefig(name)
         else:
             plt.show()
 
