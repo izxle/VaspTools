@@ -48,17 +48,14 @@ i_ads = min((atoms[i].z, i) for i in ix_ads)[1]
 distances = atoms.get_distances(i_ads, ix_surf, mic=True)
 
 ix_bonded = [i for i, d in zip(ix_surf, distances) if d <= d_cutoff]
+d_bond = min(distances)
 if not ix_bonded:
-    d_min = min(distances)
     print(f'WARNING: did not find bonded atoms with cutoff={d_cutoff}\n'
-          f'using minimum distance: {d_min}')
-    height_ads = d_min
-    d_bond = d_min
+          f'using naive distance as surface distance: {naive_distance}')
+    height_ads = naive_distance
 else:
     z_bonded = max(atoms[i].z for i in ix_bonded)
     height_ads = z_ads - z_bonded
-    d_bond = min(atoms[i].z for i in ix_bonded)
-
 
 
 text = f'''adsorbate distance from surface
