@@ -52,14 +52,14 @@ if not ix_bonded:
     d_min = min(distances)
     print(f'WARNING: did not find bonded atoms with cutoff={d_cutoff}\n'
           f'using minimum distance: {d_min}')
-    z_bonded = d_min
+    height_ads = d_min
     d_bond = d_min
 else:
     z_bonded = max(atoms[i].z for i in ix_bonded)
+    height_ads = z_ads - z_bonded
     d_bond = min(atoms[i].z for i in ix_bonded)
 
 
-height_ads = z_ads - z_bonded
 
 text = f'''adsorbate distance from surface
 
