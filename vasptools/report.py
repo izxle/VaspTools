@@ -147,6 +147,15 @@ class ReportSingleAdsorption(Report):
         )
         return text
 
+    def __lt__(self, other):
+        return self.ads_en < other.ads_en
+
+    def __gt__(self, other):
+        return self.ads_en > other.ads_en
+
+    def __eq__(self, other):
+        return (self.name, self.ads_en) == (other.name, other.ads_en)
+
 
 class ReportCompareAdsorption(Report):
     def __init__(self, results, slab, ads, subdir='', relative=False):
