@@ -34,7 +34,8 @@ def generate_report(results: list, ads: bool=False, surf_en: bool=False, reps=No
             report = ReportCompareAdsorption(results=results,
                                              slab=slab,
                                              ads=adsorbate,
-                                             subdir=subdir)
+                                             subdir=subdir,
+                                             relative=ads.relative)
         elif surf_en:
             bulk = read(directory=surf_en.bulk)
             report = ReportCompareSurface(results=results,

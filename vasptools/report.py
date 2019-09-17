@@ -149,11 +149,12 @@ class ReportSingleAdsorption(Report):
 
 
 class ReportCompareAdsorption(Report):
-    def __init__(self, results, slab, ads, subdir=''):
+    def __init__(self, results, slab, ads, subdir='', relative=False):
         super().__init__(subdir)
         self.slab = slab
         self.ads = ads
         self.results = results
+        self.relative = relative
 
         ads_energies = dict()
         for whole in results:
@@ -170,12 +171,17 @@ class ReportCompareAdsorption(Report):
             ads_energies[name] = report
 
         self.ads_energies = ads_energies
+        if relative:
+            ref = min(ads_energies, key=ads_energies.get)
+            self.reference = ref
+            self.ref_en = ads_energies[ref].ads_en
 
     def __str__(self):
-        text = 'Adsorption Energies\n'
+        text = f'{"Relative " if self.relative else ""}Adsorption Energies\n'
 
         for name, report in self.ads_energies.items():
-            text += f'{name[:self._name_len]:{self._name_len}} {report.ads_en:{self._float_format}}\n'
+            energy = report.ads_en - self.ref_en if self.relative else report.ads_en
+            text += f'{name[:self._name_len]:{self._name_len}} {energy:{self._float_format}}\n'
 
         return text
 
