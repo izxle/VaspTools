@@ -181,9 +181,14 @@ class ReportCompareAdsorption(Report):
 
         self.ads_energies = ads_energies
         if relative:
-            ref = min(ads_energies, key=ads_energies.get)
-            self.reference = ref
-            self.ref_en = ads_energies[ref].ads_en
+            if relative is True:
+                ref = min(ads_energies, key=ads_energies.get)
+                self.reference = ref
+                ref_en = ads_energies[ref].ads_en
+            else:
+                ref_en = relative
+            self.ref_en =ref_en
+
 
     def __str__(self):
         text = f'{"Relative " if self.relative else ""}Adsorption Energies\n'

@@ -48,7 +48,7 @@ def get_args(argv=''):
     parsadd.add_argument('+s', '++slab')
     parsadd.add_argument('+a', '++ads', '++adsorbate', dest='adsorbate')
     parsadd.add_argument('+v', action='store_true')
-    parsadd.add_argument('+r', '++relative', action='store_true')
+    parsadd.add_argument('+r', '++relative', nargs='?', const=True, default=False)
 
     parsurf = ArgumentParser(prefix_chars='+', **options)
     parsurf.add_argument('part', nargs='*')
