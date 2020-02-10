@@ -85,12 +85,14 @@ def fix_layers(atoms: Atoms, fix: int, direction=(0, 0, 1)):
 
 def tag_layers(atoms):
     direction = (0, 0, 1)
-    set_tags(atoms, direction)
+    positions = set_tags(atoms, direction)
+    return positions
 
 
 def set_tags(atoms, direction=(0, 0, 1)):
-    tags, positions = get_layers(atoms, direction, 0.3)
+    tags, positions = get_layers(atoms, direction, 0.6)
     atoms.set_tags(tags)
+    return positions
 
 
 def in_cell(atoms: Atoms, index: int=None):
