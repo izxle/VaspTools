@@ -120,11 +120,12 @@ class ReportCompare(Report):
 
 
 class ReportSingleAdsorption(Report):
-    def __init__(self, whole, slab, ads):
+    def __init__(self, whole, slab, ads, relative=False):
         super().__init__()
         self.whole = whole
         self.slab = slab
         self.ads = ads
+        self.relative = relative
 
         self.name = whole.name
 
@@ -136,10 +137,18 @@ class ReportSingleAdsorption(Report):
         ads_en = (whole.E0 - slab.E0 - n * ads.E0) / n
         self.ads_en = ads_en
 
+        self.ref_en = relative if isinstance(relative, float) else 0
+
     def __str__(self):
+        reference = ''
+        if self.relative:
+            energy = self.ads_en - self.ref_en
+            reference = f'relative energy    {energy:{self._float_format}}\n'
+            reference += f'  reference        {self.ref_en:{self._float_format}}\n'
         text = (
             f'{self.name}\n'
             f'adsorption energy: {self.ads_en:{self._float_format}}\n'
+            f'{reference}'
             f'  slab + ads       {self.whole.E0:{self._float_format}}\n'
             f'  slab             {self.slab.E0:{self._float_format}}\n'
             f'{self.ratio:3} x ads ({self.ads_element:>2})     {self.ratio * self.ads.E0:{self._float_format}}\n'

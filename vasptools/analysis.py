@@ -13,7 +13,8 @@ def generate_report(results: list, ads: bool=False, surf_en: bool=False, reps=No
             adsorbate = read(directory=ads.adsorbate)
             report = ReportSingleAdsorption(whole=results,
                                             slab=slab,
-                                            ads=adsorbate)
+                                            ads=adsorbate,
+                                            relative=ads.relative)
         elif surf_en:
             bulk = read(directory=surf_en.bulk)
             report = ReportSimpleSurface(slab=results,
